@@ -1,0 +1,26 @@
+import express from "express";
+import {
+  getAllPosts,
+  createPost,
+  likePost,
+  commentPost,
+  sharePost,
+  sendFriendRequest,
+  acceptFriendRequest,
+  getMyFriendData,
+} from "../controller/social.js";
+import auth from "../middleware/auth.js";
+import { upload } from "../middleware/upload.js";
+
+const router = express.Router();
+
+router.get("/posts", getAllPosts);
+router.post("/post", auth, upload.single("media"), createPost);
+router.patch("/like/:id", auth, likePost);
+router.post("/comment/:id", auth, commentPost);
+router.patch("/share/:id", auth, sharePost);
+router.post("/friend/send", auth, sendFriendRequest);
+router.post("/friend/accept", auth, acceptFriendRequest);
+router.get("/friend/mydata", auth, getMyFriendData);
+
+export default router;
