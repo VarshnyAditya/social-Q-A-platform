@@ -10,5 +10,7 @@ const userschema = mongoose.Schema({
   friends: { type: [String], default: [] },
   friendRequestsSent: { type: [String], default: [] },
   friendRequestsReceived: { type: [String], default: [] },
+  lastPasswordReset: { type: Date, default: null },
 });
+
 export default mongoose.model("user", userschema);
