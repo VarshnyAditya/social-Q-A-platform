@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setloading] = useState(false);
   const [error, seterror] = useState(null);
 
-  const Signup = async ({ name, email, password }) => {
+  const Signup = async ({ name, email, password, phone }) => {
     setloading(true);
     seterror(null);
     try {
@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
         name,
         email,
         password,
+        phone,
       });
       const { data, token } = res.data;
       localStorage.setItem("user", JSON.stringify({...data,token}));

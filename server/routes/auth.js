@@ -5,6 +5,9 @@ import {
   Signup,
   updateprofile,
   forgotPassword,
+  sendOTP,
+  verifyOTP,
+  resetPasswordAfterOTP,
 } from "../controller/auth.js";
 import auth from "../middleware/auth.js";
 
@@ -15,5 +18,8 @@ router.post("/login", Login);
 router.get("/getalluser", getallusers);
 router.patch("/update/:id", auth, updateprofile);
 router.post("/forgot-password", forgotPassword);
+router.post("/send-otp", sendOTP);
+router.post("/verify-otp", verifyOTP);
+router.post("/reset-password-otp", resetPasswordAfterOTP);
 
 export default router;

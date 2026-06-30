@@ -77,10 +77,10 @@ export default function SocialPage() {
 
   useEffect(() => {
     const load = async () => {
-      await fetchPosts();
       if (user) {
-        await fetchFriendData();
-        await fetchAllUsers();
+        await Promise.all([fetchPosts(), fetchFriendData(), fetchAllUsers()]);
+      } else {
+        await fetchPosts();
       }
       setLoading(false);
     };

@@ -9,7 +9,7 @@ const questionschema = mongoose.Schema(
     upvote: { type: [String], default: [] },
     downvote: { type: [String], default: [] },
     userposted: { type: String },
-    userid: { type: String },
+    userid: { type: String, index: true },
     askedon: { type: Date, default: Date.now },
     answer: [
       {

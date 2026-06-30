@@ -1,11 +1,26 @@
 import mongoose from "mongoose";
 import question from "../models/question.js";
-
+import { checkQuestionLimit } from "./subscriptionLimit.js";
+import { PLANS } from "./subscription.js";
 
 export const Askquestion = async (req, res) => {
   const { postquestiondata } = req.body;
-  const postques = new question({ ...postquestiondata });
+
   try {
+    // ---- SUBSCRIPTION LIMIT CHECK ----
+    // req.userid is set by the auth middleware from the JWT (tamper-proof, not from body)
+    const { allowed, limit, used, plan } = await checkQuestionLimit(req.userid);
+
+    if (!allowed) {
+      return res.status(403).json({
+        message: `You've reached your daily limit of ${limit} question(s) on the ${PLANS[plan].label} plan. Upgrade your plan to post more questions today.`,
+        plan,
+        limit,
+        used,
+      });
+    }
+
+    const postques = new question({ ...postquestiondata, userid: req.userid });
     await postques.save();
     res.status(200).json({ data: postques });
   } catch (error) {
@@ -24,6 +39,7 @@ export const getallquestion = async (req, res) => {
     return;
   }
 };
+
 export const deletequestion = async (req, res) => {
   const { id: _id } = req.params;
 
@@ -38,9 +54,10 @@ export const deletequestion = async (req, res) => {
     return;
   }
 };
+
 export const votequestion = async (req, res) => {
   const { id: _id } = req.params;
-  const { value ,userid} = req.body;
+  const { value, userid } = req.body;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(400).json({ message: "question unavailable" });
   }

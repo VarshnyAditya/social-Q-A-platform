@@ -2,19 +2,23 @@ import mongoose from "mongoose";
 import user from "../models/auth.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendOTPEmail } from "../utils/mailer.js";
 
-// Generates a random password — only uppercase and lowercase letters, no numbers or special chars
-const generatePassword = (length = 12) => {
-  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const generateLettersPassword = (length = 12) => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   let password = "";
   for (let i = 0; i < length; i++) {
-    password += upper.charAt(Math.floor(Math.random() * upper.length));
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return password;
 };
 
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+};
+
 export const Signup = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone } = req.body;
   try {
     const exisitinguser = await user.findOne({ email });
     if (exisitinguser) {
@@ -25,6 +29,7 @@ export const Signup = async (req, res) => {
       name,
       email,
       password: hashpassword,
+      phone: phone || "",
     });
     const token = jwt.sign(
       { email: newuser.email, id: newuser._id },
@@ -86,28 +91,22 @@ export const updateprofile = async (req, res) => {
   }
 };
 
-export const forgotPassword = async (req, res) => {
-  const { email, customPassword } = req.body;
+// STEP 1: Send OTP — works with email OR phone number
+export const sendOTP = async (req, res) => {
+  const { identifier } = req.body; // email or phone
 
-  if (!email) {
-    return res.status(400).json({ message: "Email is required" });
-  }
-
-  // If custom password provided, validate letters only
-  if (customPassword) {
-    const lettersOnly = /^[a-zA-Z]+$/;
-    if (!lettersOnly.test(customPassword)) {
-      return res.status(400).json({ message: "Password must contain only uppercase and lowercase letters — no numbers or special characters." });
-    }
-    if (customPassword.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters." });
-    }
+  if (!identifier) {
+    return res.status(400).json({ message: "Email or phone number is required" });
   }
 
   try {
-    const existingUser = await user.findOne({ email });
+    // Find user by email or phone
+    const existingUser = await user.findOne({
+      $or: [{ email: identifier }, { phone: identifier }],
+    });
+
     if (!existingUser) {
-      return res.status(404).json({ message: "No account found with this email" });
+      return res.status(404).json({ message: "No account found with this email or phone number" });
     }
 
     // Check 1-per-day limit
@@ -118,7 +117,6 @@ export const forgotPassword = async (req, res) => {
         lastReset.getFullYear() === now.getFullYear() &&
         lastReset.getMonth() === now.getMonth() &&
         lastReset.getDate() === now.getDate();
-
       if (isSameDay) {
         return res.status(429).json({
           message: "You can use this option only one time per day.",
@@ -126,22 +124,133 @@ export const forgotPassword = async (req, res) => {
       }
     }
 
-    // Use custom password if provided, else generate one
-    const finalPassword = customPassword || generatePassword(12);
-    const hashedPassword = await bcrypt.hash(finalPassword, 12);
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    await user.findByIdAndUpdate(existingUser._id, {
+    // Save OTP to DB
+    await user.findByIdAndUpdate(existingUser._id, { otp, otpExpiry });
+
+    // Always send OTP to their registered EMAIL
+    await sendOTPEmail(existingUser.email, otp, existingUser.name);
+
+    res.status(200).json({
+      message: "OTP sent to your registered email address",
+      // Mask the email for display: a***@gmail.com
+      maskedEmail: existingUser.email.replace(/(.{1})(.*)(@.*)/, (_, a, b, c) =>
+        a + "*".repeat(Math.max(b.length, 3)) + c
+      ),
+      userId: existingUser._id,
+    });
+  } catch (error) {
+    console.log("Send OTP error:", error.message);
+    res.status(500).json({ message: "Failed to send OTP. Check your email config." });
+  }
+};
+
+// STEP 2: Verify OTP
+export const verifyOTP = async (req, res) => {
+  const { userId, otp } = req.body;
+
+  if (!userId || !otp) {
+    return res.status(400).json({ message: "User ID and OTP are required" });
+  }
+
+  try {
+    const existingUser = await user.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!existingUser.otp || !existingUser.otpExpiry) {
+      return res.status(400).json({ message: "No OTP found. Please request a new one." });
+    }
+
+    if (new Date() > new Date(existingUser.otpExpiry)) {
+      return res.status(400).json({ message: "OTP has expired. Please request a new one." });
+    }
+
+    if (existingUser.otp !== otp.trim()) {
+      return res.status(400).json({ message: "Incorrect OTP. Please try again." });
+    }
+
+    // OTP is correct — clear it so it can't be reused
+    await user.findByIdAndUpdate(userId, { otp: null, otpExpiry: null });
+
+    res.status(200).json({ message: "OTP verified successfully", userId });
+  } catch (error) {
+    console.log("Verify OTP error:", error.message);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// STEP 3: Set new password after OTP verified
+export const resetPasswordAfterOTP = async (req, res) => {
+  const { userId, newPassword } = req.body;
+
+  if (!userId || !newPassword) {
+    return res.status(400).json({ message: "User ID and new password are required" });
+  }
+
+  const lettersOnly = /^[a-zA-Z]+$/;
+  if (!lettersOnly.test(newPassword)) {
+    return res.status(400).json({ message: "Password must contain only uppercase and lowercase letters." });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters." });
+  }
+
+  try {
+    const existingUser = await user.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Make sure OTP was verified (otp field should be null)
+    if (existingUser.otp !== null) {
+      return res.status(403).json({ message: "OTP not verified. Please verify OTP first." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await user.findByIdAndUpdate(userId, {
       password: hashedPassword,
       lastPasswordReset: new Date(),
     });
 
-    res.status(200).json({
-      message: "Password reset successful",
-      newPassword: finalPassword,
-      name: existingUser.name,
-    });
+    res.status(200).json({ message: "Password reset successful", name: existingUser.name });
   } catch (error) {
-    console.log("Forgot password error:", error.message);
+    console.log("Reset password error:", error.message);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// Old email-only forgot password (kept for backward compat)
+export const forgotPassword = async (req, res) => {
+  const { email, customPassword } = req.body;
+  if (!email) return res.status(400).json({ message: "Email is required" });
+  if (customPassword) {
+    const lettersOnly = /^[a-zA-Z]+$/;
+    if (!lettersOnly.test(customPassword))
+      return res.status(400).json({ message: "Password must contain only uppercase and lowercase letters." });
+    if (customPassword.length < 6)
+      return res.status(400).json({ message: "Password must be at least 6 characters." });
+  }
+  try {
+    const existingUser = await user.findOne({ email });
+    if (!existingUser) return res.status(404).json({ message: "No account found with this email" });
+    if (existingUser.lastPasswordReset) {
+      const lastReset = new Date(existingUser.lastPasswordReset);
+      const now = new Date();
+      const isSameDay =
+        lastReset.getFullYear() === now.getFullYear() &&
+        lastReset.getMonth() === now.getMonth() &&
+        lastReset.getDate() === now.getDate();
+      if (isSameDay) return res.status(429).json({ message: "You can use this option only one time per day." });
+    }
+    const finalPassword = customPassword || generateLettersPassword(12);
+    const hashedPassword = await bcrypt.hash(finalPassword, 12);
+    await user.findByIdAndUpdate(existingUser._id, { password: hashedPassword, lastPasswordReset: new Date() });
+    res.status(200).json({ message: "Password reset successful", newPassword: finalPassword, name: existingUser.name });
+  } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
