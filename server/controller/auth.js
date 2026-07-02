@@ -14,7 +14,7 @@ const generateLettersPassword = (length = 12) => {
 };
 
 const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 export const Signup = async (req, res) => {
@@ -26,15 +26,12 @@ export const Signup = async (req, res) => {
     }
     const hashpassword = await bcrypt.hash(password, 12);
     const newuser = await user.create({
-      name,
-      email,
-      password: hashpassword,
-      phone: phone || "",
+      name, email, password: hashpassword, phone: phone || "",
     });
     const token = jwt.sign(
       { email: newuser.email, id: newuser._id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "7d" }
     );
     res.status(200).json({ data: newuser, token });
   } catch (error) {
@@ -56,7 +53,7 @@ export const Login = async (req, res) => {
     const token = jwt.sign(
       { email: exisitinguser.email, id: exisitinguser._id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "7d" }
     );
     res.status(200).json({ data: exisitinguser, token });
   } catch (error) {
@@ -75,14 +72,14 @@ export const getallusers = async (req, res) => {
 
 export const updateprofile = async (req, res) => {
   const { id: _id } = req.params;
-  const { name, about, tags } = req.body.editForm;
+  const { name, about, tags, phone } = req.body.editForm;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(400).json({ message: "User unavailable" });
   }
   try {
     const updateprofile = await user.findByIdAndUpdate(
       _id,
-      { $set: { name, about, tags } },
+      { $set: { name, about, tags, phone: phone || "" } },
       { new: true }
     );
     res.status(200).json({ data: updateprofile });
@@ -91,19 +88,25 @@ export const updateprofile = async (req, res) => {
   }
 };
 
-// STEP 1: Send OTP — works with email OR phone number
+// STEP 1: Send OTP
 export const sendOTP = async (req, res) => {
-  const { identifier } = req.body; // email or phone
+  const { identifier } = req.body;
+
+  console.log("=== SEND OTP DEBUG ===");
+  console.log("Identifier received:", identifier);
 
   if (!identifier) {
     return res.status(400).json({ message: "Email or phone number is required" });
   }
 
   try {
-    // Find user by email or phone
     const existingUser = await user.findOne({
       $or: [{ email: identifier }, { phone: identifier }],
     });
+
+    console.log("User found:", existingUser ? existingUser.name : "NOT FOUND");
+    console.log("User email:", existingUser ? existingUser.email : "N/A");
+    console.log("User phone in DB:", existingUser ? existingUser.phone : "N/A");
 
     if (!existingUser) {
       return res.status(404).json({ message: "No account found with this email or phone number" });
@@ -113,10 +116,13 @@ export const sendOTP = async (req, res) => {
     if (existingUser.lastPasswordReset) {
       const lastReset = new Date(existingUser.lastPasswordReset);
       const now = new Date();
+      console.log("Last reset date:", lastReset.toDateString());
+      console.log("Today:", now.toDateString());
       const isSameDay =
         lastReset.getFullYear() === now.getFullYear() &&
         lastReset.getMonth() === now.getMonth() &&
         lastReset.getDate() === now.getDate();
+      console.log("Is same day (limit hit):", isSameDay);
       if (isSameDay) {
         return res.status(429).json({
           message: "You can use this option only one time per day.",
@@ -125,17 +131,16 @@ export const sendOTP = async (req, res) => {
     }
 
     const otp = generateOTP();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Save OTP to DB
     await user.findByIdAndUpdate(existingUser._id, { otp, otpExpiry });
+    console.log("OTP saved to DB:", otp);
 
-    // Always send OTP to their registered EMAIL
     await sendOTPEmail(existingUser.email, otp, existingUser.name);
+    console.log("OTP email sent to:", existingUser.email);
 
     res.status(200).json({
       message: "OTP sent to your registered email address",
-      // Mask the email for display: a***@gmail.com
       maskedEmail: existingUser.email.replace(/(.{1})(.*)(@.*)/, (_, a, b, c) =>
         a + "*".repeat(Math.max(b.length, 3)) + c
       ),
@@ -143,6 +148,7 @@ export const sendOTP = async (req, res) => {
     });
   } catch (error) {
     console.log("Send OTP error:", error.message);
+    console.log("Full error:", error);
     res.status(500).json({ message: "Failed to send OTP. Check your email config." });
   }
 };
@@ -150,47 +156,34 @@ export const sendOTP = async (req, res) => {
 // STEP 2: Verify OTP
 export const verifyOTP = async (req, res) => {
   const { userId, otp } = req.body;
-
   if (!userId || !otp) {
     return res.status(400).json({ message: "User ID and OTP are required" });
   }
-
   try {
     const existingUser = await user.findById(userId);
-    if (!existingUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
+    if (!existingUser) return res.status(404).json({ message: "User not found" });
     if (!existingUser.otp || !existingUser.otpExpiry) {
       return res.status(400).json({ message: "No OTP found. Please request a new one." });
     }
-
     if (new Date() > new Date(existingUser.otpExpiry)) {
       return res.status(400).json({ message: "OTP has expired. Please request a new one." });
     }
-
     if (existingUser.otp !== otp.trim()) {
       return res.status(400).json({ message: "Incorrect OTP. Please try again." });
     }
-
-    // OTP is correct — clear it so it can't be reused
     await user.findByIdAndUpdate(userId, { otp: null, otpExpiry: null });
-
     res.status(200).json({ message: "OTP verified successfully", userId });
   } catch (error) {
-    console.log("Verify OTP error:", error.message);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
 
-// STEP 3: Set new password after OTP verified
+// STEP 3: Reset password after OTP verified
 export const resetPasswordAfterOTP = async (req, res) => {
   const { userId, newPassword } = req.body;
-
   if (!userId || !newPassword) {
     return res.status(400).json({ message: "User ID and new password are required" });
   }
-
   const lettersOnly = /^[a-zA-Z]+$/;
   if (!lettersOnly.test(newPassword)) {
     return res.status(400).json({ message: "Password must contain only uppercase and lowercase letters." });
@@ -198,32 +191,23 @@ export const resetPasswordAfterOTP = async (req, res) => {
   if (newPassword.length < 6) {
     return res.status(400).json({ message: "Password must be at least 6 characters." });
   }
-
   try {
     const existingUser = await user.findById(userId);
-    if (!existingUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Make sure OTP was verified (otp field should be null)
+    if (!existingUser) return res.status(404).json({ message: "User not found" });
     if (existingUser.otp !== null) {
       return res.status(403).json({ message: "OTP not verified. Please verify OTP first." });
     }
-
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     await user.findByIdAndUpdate(userId, {
       password: hashedPassword,
       lastPasswordReset: new Date(),
     });
-
     res.status(200).json({ message: "Password reset successful", name: existingUser.name });
   } catch (error) {
-    console.log("Reset password error:", error.message);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
 
-// Old email-only forgot password (kept for backward compat)
 export const forgotPassword = async (req, res) => {
   const { email, customPassword } = req.body;
   if (!email) return res.status(400).json({ message: "Email is required" });

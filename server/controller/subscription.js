@@ -30,7 +30,7 @@ const isWithinPaymentWindow = () => {
   const minutes = istNow.getMinutes();
   const totalMinutes = hours * 60 + minutes;
   const windowStart = 10 * 60; // 10:00 AM
-  const windowEnd = 11 * 60; // 11:00 AM
+  const windowEnd = 11 * 60; // 11:00 PM
   return totalMinutes >= windowStart && totalMinutes < windowEnd;
 };
 
@@ -109,6 +109,8 @@ export const getMyStatus = async (req, res) => {
 // POST /subscription/create-order   { plan: "bronze" | "silver" | "gold" }
 export const createOrder = async (req, res) => {
   try {
+    console.log("RAZORPAY KEY:", process.env.RAZORPAY_KEY_ID);
+    console.log("RAZORPAY SECRET:", process.env.RAZORPAY_KEY_SECRET ? "present" : "missing");
     // ---- TIME GATE ----
     if (!isWithinPaymentWindow()) {
       return res.status(403).json({
@@ -125,7 +127,7 @@ export const createOrder = async (req, res) => {
     const options = {
       amount, // in paise
       currency: "INR",
-      receipt: `receipt_${req.userid}_${Date.now()}`,
+      receipt: `rcpt_${Date.now()}`,
       notes: { userid: req.userid, plan },
     };
 
@@ -139,6 +141,7 @@ export const createOrder = async (req, res) => {
       plan,
     });
   } catch (error) {
+    console.log("Razorpay error full:", error);
     res.status(500).json({ message: "Failed to create order", error: error.message });
   }
 };

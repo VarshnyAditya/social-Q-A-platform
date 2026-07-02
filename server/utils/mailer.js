@@ -53,7 +53,7 @@ export const sendOTPEmail = async (toEmail, otp, userName) => {
   const mailOptions = {
     from: `"CodeQuest" <${user}>`,
     to: toEmail,
-    subject: "Your OTP for Password Reset — CodeQuest",
+    subject: "Your CodeQuest account verification code",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px;">
         <div style="text-align: center; margin-bottom: 24px;">
