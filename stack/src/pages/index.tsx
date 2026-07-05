@@ -70,6 +70,7 @@ const questions = [
 export default function Home() {
   const [question, setquestion] = useState<any>(null);
   const [loading, setloading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"newest" | "active" | "unanswered">("newest");
   const router = useRouter();
   useEffect(() => {
     const fetchquestion = async () => {
@@ -99,6 +100,37 @@ export default function Home() {
     );
   }
 
+  // ---- Tab filtering/sorting (Newest / Active / Unanswered) ----
+  const getLastActivity = (q: any) => {
+    const answerDates = (q.answer || []).map((a: any) => new Date(a.answeredon).getTime());
+    return Math.max(new Date(q.askedon).getTime(), ...answerDates, 0);
+  };
+
+  const getDisplayedQuestions = () => {
+    const list = [...question];
+    if (activeTab === "unanswered") {
+      return list
+        .filter((q: any) => (q.answer?.length || 0) === 0)
+        .sort((a: any, b: any) => new Date(b.askedon).getTime() - new Date(a.askedon).getTime());
+    }
+    if (activeTab === "active") {
+      return list.sort((a: any, b: any) => getLastActivity(b) - getLastActivity(a));
+    }
+    // newest (default)
+    return list.sort(
+      (a: any, b: any) => new Date(b.askedon).getTime() - new Date(a.askedon).getTime()
+    );
+  };
+
+  const displayedQuestions = getDisplayedQuestions();
+
+  const tabButtonClass = (tab: string) =>
+    `px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
+      activeTab === tab
+        ? "bg-gray-200 text-gray-700 font-medium"
+        : "text-gray-600 hover:bg-gray-100"
+    }`;
+
   return (
     <Mainlayout>
       <main className="min-w-0 p-4 lg:p-6 ">
@@ -113,39 +145,45 @@ export default function Home() {
         </div>
         <div className="w-full">
           <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4 text-sm gap-2 sm:gap-4">
-            <span className="text-gray-600">{question.length} questions</span>
+            <span className="text-gray-600">{displayedQuestions.length} questions</span>
             <div className="flex flex-wrap gap-1 sm:gap-2">
-              <button className="px-2 sm:px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs sm:text-sm">
+              <button
+                onClick={() => setActiveTab("newest")}
+                className={tabButtonClass("newest")}
+              >
                 Newest
               </button>
-              <button className="px-2 sm:px-3 py-1 text-gray-600 hover:bg-gray-100 rounded text-xs sm:text-sm">
+              <button
+                onClick={() => setActiveTab("active")}
+                className={tabButtonClass("active")}
+              >
                 Active
               </button>
-              <button className="px-2 sm:px-3 py-1 text-gray-600 hover:bg-gray-100 rounded flex items-center text-xs sm:text-sm">
-                Bountied
-                <Badge variant="secondary" className="ml-1 text-xs">
-                  25
-                </Badge>
-              </button>
-              <button className="px-2 sm:px-3 py-1 text-gray-600 hover:bg-gray-100 rounded text-xs sm:text-sm">
+              <button
+                onClick={() => setActiveTab("unanswered")}
+                className={tabButtonClass("unanswered")}
+              >
                 Unanswered
-              </button>
-              <button className="px-2 sm:px-3 py-1 text-gray-600 hover:bg-gray-100 rounded text-xs sm:text-sm">
-                More ▼
-              </button>
-              <button className="px-2 sm:px-3 py-1 border border-gray-300 text-gray-600 hover:bg-gray-50 rounded ml-auto text-xs sm:text-sm">
-                🔍 Filter
               </button>
             </div>
           </div>
           <div className="space-y-4">
-            {question.map((question: any) => (
+            {displayedQuestions.length === 0 ? (
+              <div className="text-center text-gray-500 py-8 text-sm">
+                No questions match this filter.
+              </div>
+            ) : (
+              displayedQuestions.map((question: any) => (
               <div key={question._id} className="border-b border-gray-200 pb-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex sm:flex-col items-center sm:items-center text-sm text-gray-600 sm:w-16 lg:w-20 gap-4 sm:gap-2">
                     <div className="text-center">
                       <div className="font-medium">
-                        {question.upvote.length}
+                        {question.answer.reduce(
+                          (sum: number, ans: any) =>
+                            sum + ((ans.upvote?.length || 0) - (ans.downvote?.length || 0)),
+                          0
+                        )}
                       </div>
                       <div className="text-xs">votes</div>
                     </div>
@@ -157,10 +195,10 @@ export default function Home() {
                             : ""
                         }`}
                       >
-                        {question.noofanswer}
+                        {question.answer.length}
                       </div>
                       <div className="text-xs">
-                        {question.noofanswer === 1
+                        {question.answer.length === 1
                           ? "answer"
                           : "answers"}
                       </div>
@@ -212,7 +250,8 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
       </main>

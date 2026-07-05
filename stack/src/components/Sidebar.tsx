@@ -8,6 +8,7 @@ import {
   Home,
   MessageSquare,
   MessageSquareIcon,
+  Star,
   Tag,
   Trophy,
   Users,
@@ -21,7 +22,7 @@ const Sidebar = ({ isopen }: any) => {
     <div>
       <aside
         className={cn(
-          " top-[53px]  w-48 lg:w-64 min-h-screen bg-white shadow-sm border-r transition-transform duration-200 ease-in-out md:translate-x-0",
+          "top-[53px] w-48 lg:w-64 min-h-screen bg-white shadow-sm border-r transition-transform duration-200 ease-in-out md:translate-x-0",
           isopen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -34,7 +35,7 @@ const Sidebar = ({ isopen }: any) => {
               </Link>
             </li>
             <li>
-              <Link href="/questions" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
+              <Link href="/" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <MessageSquareIcon className="w-4 h-4 mr-2 lg:mr-3" />
                 Questions
               </Link>
@@ -63,6 +64,13 @@ const Sidebar = ({ isopen }: any) => {
                 <CreditCard className="w-4 h-4 mr-2 lg:mr-3" />
                 Subscription
                 <Badge variant="secondary" className="ml-auto text-xs bg-yellow-100 text-yellow-800">PRO</Badge>
+              </Link>
+            </li>
+            <li>
+              <Link href="/points" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
+                <Star className="w-4 h-4 mr-2 lg:mr-3" />
+                Rewards
+                <Badge variant="secondary" className="ml-auto text-xs bg-green-100 text-green-700">NEW</Badge>
               </Link>
             </li>
             <li>
