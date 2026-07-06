@@ -16,8 +16,11 @@ import { toast } from "react-toastify";
 
 const index = () => {
   const router = useRouter();
-  const { Login, loading } = useAuth();
+  const { Login, verifyLoginOtp, loading } = useAuth();
   const [form, setform] = useState({ email: "", password: "" });
+  const [step, setStep] = useState("credentials"); // "credentials" | "otp"
+  const [pendingUserId, setPendingUserId] = useState(null);
+  const [otp, setOtp] = useState("");
   const handleChange = (e: any) => {
     setform({ ...form, [e.target.id]: e.target.value });
   };
@@ -28,7 +31,26 @@ const index = () => {
       return;
     }
     try {
-      await Login(form);
+      const result: any = await Login(form);
+      if (result?.requiresOtp) {
+        setPendingUserId(result.userId);
+        setStep("otp");
+        toast.info(result.message || "OTP sent to your email");
+      } else {
+        router.push("/");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleVerifyOtp = async (e: any) => {
+    e.preventDefault();
+    if (!otp) {
+      toast.error("Enter the OTP sent to your email");
+      return;
+    }
+    try {
+      await verifyLoginOtp({ userId: pendingUserId, otp });
       router.push("/");
     } catch (error) {
       console.log(error);
@@ -49,6 +71,49 @@ const index = () => {
             </span>
           </Link>
         </div>
+        {step === "otp" ? (
+          <form onSubmit={handleVerifyOtp}>
+            <Card>
+              <CardHeader className="space-y-1 text-center">
+                <CardTitle className="text-xl lg:text-2xl">
+                  Verify it's you
+                </CardTitle>
+                <CardDescription>
+                  We emailed a 6-digit code — enter it below to finish logging in
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="otp" className="text-sm">
+                    OTP
+                  </Label>
+                  <Input
+                    id="otp"
+                    type="text"
+                    placeholder="123456"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
+                >
+                  {loading ? "Verifying..." : "Verify & Log in"}
+                </Button>
+                <div className="text-center text-sm">
+                  <button
+                    type="button"
+                    className="text-blue-600 hover:underline"
+                    onClick={() => setStep("credentials")}
+                  >
+                    Back to login
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          </form>
+        ) : (
         <form onSubmit={handlesubmit}>
           <Card>
             <CardHeader className="space-y-1 text-center">
@@ -155,6 +220,7 @@ const index = () => {
             </CardContent>
           </Card>
         </form>
+        )}
       </div>
     </div>
   );

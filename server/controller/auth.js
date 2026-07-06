@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import user from "../models/auth.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { UAParser } from "ua-parser-js";
 import { sendOTPEmail } from "../utils/mailer.js";
 
 const generateLettersPassword = (length = 12) => {
@@ -15,6 +16,59 @@ const generateLettersPassword = (length = 12) => {
 
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// ---- Task 5: login environment detection ----
+const getClientIp = (req) => {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return req.socket?.remoteAddress || req.ip || "unknown";
+};
+
+// Note: a User-Agent string can only ever tell you "mobile", "tablet", or
+// neither — there is no reliable way to distinguish a laptop from a desktop
+// from the browser alone, so anything that isn't mobile/tablet is bucketed
+// as "desktop".
+const parseLoginEnv = (req) => {
+  const uaString = req.headers["user-agent"] || "";
+  const { browser, os, device } = new UAParser(uaString).getResult();
+  return {
+    browser: browser.name || "Unknown",
+    os: os.name || "Unknown",
+    deviceType: device.type === "mobile" || device.type === "tablet" ? device.type : "desktop",
+    ip: getClientIp(req),
+  };
+};
+
+// Mobile logins are only allowed 10:00 AM – 1:00 PM IST
+const isWithinMobileLoginWindow = () => {
+  const now = new Date();
+  const istString = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+  const istNow = new Date(istString);
+  const totalMinutes = istNow.getHours() * 60 + istNow.getMinutes();
+  const windowStart = 10 * 60; // 10:00 AM
+  const windowEnd = 13 * 60; // 1:00 PM
+  return totalMinutes >= windowStart && totalMinutes < windowEnd;
+};
+
+const recordLogin = async (userId, env) => {
+  await user.findByIdAndUpdate(userId, {
+    $push: {
+      loginHistory: {
+        $each: [
+          {
+            browser: env.browser,
+            os: env.os,
+            deviceType: env.deviceType,
+            ip: env.ip,
+            loginAt: new Date(),
+          },
+        ],
+        $position: 0, // newest first
+        $slice: 50, // cap history so it can't grow unbounded
+      },
+    },
+  });
 };
 
 export const Signup = async (req, res) => {
@@ -50,14 +104,94 @@ export const Login = async (req, res) => {
     if (!ispasswordcrct) {
       return res.status(400).json({ message: "Invalid password" });
     }
+
+    const env = parseLoginEnv(req);
+
+    // ---- Mobile devices: time-restricted access (10 AM – 1 PM IST only) ----
+    if (env.deviceType === "mobile" && !isWithinMobileLoginWindow()) {
+      return res.status(403).json({
+        message:
+          "Login from mobile devices is only allowed between 10:00 AM and 1:00 PM IST. Please try again during that window.",
+      });
+    }
+
+    // ---- Chrome: require OTP verification before granting access ----
+    if (env.browser === "Chrome") {
+      const otp = generateOTP();
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+      await user.findByIdAndUpdate(exisitinguser._id, { otp, otpExpiry });
+      await sendOTPEmail(exisitinguser.email, otp, exisitinguser.name);
+      return res.status(200).json({
+        requiresOtp: true,
+        userId: exisitinguser._id,
+        message: "OTP sent to your registered email. Please verify to continue.",
+      });
+    }
+
+    // ---- All other browsers (e.g. Microsoft Edge/IE, Firefox, Safari): direct access ----
+    await recordLogin(exisitinguser._id, env);
     const token = jwt.sign(
       { email: exisitinguser.email, id: exisitinguser._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    res.status(200).json({ data: exisitinguser, token });
+    const updatedUser = await user.findById(exisitinguser._id);
+    res.status(200).json({ data: updatedUser, token });
   } catch (error) {
+    console.log(error);
     res.status(500).json("something went wrong..");
+  }
+};
+
+// ---- Task 5: verify OTP for a Chrome login, then issue the token ----
+export const verifyLoginOTP = async (req, res) => {
+  const { userId, otp } = req.body;
+  if (!userId || !otp) {
+    return res.status(400).json({ message: "User ID and OTP are required" });
+  }
+  try {
+    const existingUser = await user.findById(userId);
+    if (!existingUser) return res.status(404).json({ message: "User not found" });
+    if (!existingUser.otp || !existingUser.otpExpiry) {
+      return res.status(400).json({ message: "No OTP found. Please login again." });
+    }
+    if (new Date() > new Date(existingUser.otpExpiry)) {
+      return res.status(400).json({ message: "OTP has expired. Please login again." });
+    }
+    if (existingUser.otp !== otp.trim()) {
+      return res.status(400).json({ message: "Incorrect OTP. Please try again." });
+    }
+
+    await user.findByIdAndUpdate(userId, { otp: null, otpExpiry: null });
+
+    const env = parseLoginEnv(req);
+    await recordLogin(userId, env);
+
+    const token = jwt.sign(
+      { email: existingUser.email, id: existingUser._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    const updatedUser = await user.findById(userId);
+    res.status(200).json({ data: updatedUser, token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// ---- Task 5: login history is only ever visible to its own owner ----
+export const getLoginHistory = async (req, res) => {
+  const { id } = req.params;
+  if (String(req.userid) !== String(id)) {
+    return res.status(403).json({ message: "You can only view your own login history" });
+  }
+  try {
+    const existingUser = await user.findById(id).select("loginHistory");
+    if (!existingUser) return res.status(404).json({ message: "User not found" });
+    res.status(200).json({ data: existingUser.loginHistory || [] });
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -238,3 +372,5 @@ export const forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+

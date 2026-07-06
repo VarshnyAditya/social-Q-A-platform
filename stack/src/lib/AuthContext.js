@@ -7,13 +7,13 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
-useEffect(() => {
-  const stored = localStorage.getItem("user");
-  if (stored) setUser(JSON.parse(stored));
-}, []);
   const [loading, setloading] = useState(false);
   const [error, seterror] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) setUser(JSON.parse(stored));
+  }, []);
 
   const Signup = async ({ name, email, password, phone }) => {
     setloading(true);
@@ -33,6 +33,8 @@ useEffect(() => {
       const msg = error.response?.data.message || "Signup failed";
       seterror(msg);
       toast.error(msg);
+    } finally {
+      setloading(false);
     }
   };
   const Login = async ({ email, password }) => {
@@ -43,14 +45,45 @@ useEffect(() => {
         email,
         password,
       });
+
+      // Chrome logins come back requiring OTP verification instead of a token
+      if (res.data.requiresOtp) {
+        return { requiresOtp: true, userId: res.data.userId, message: res.data.message };
+      }
+
       const { data, token } = res.data;
       localStorage.setItem("user", JSON.stringify({...data,token}));
       setUser(data);
       toast.success("Login Successful");
+      return { requiresOtp: false };
     } catch (error) {
-      const msg = error.response?.data.message || "Login failed";
+      const msg = error.response?.data?.message || "Login failed";
       seterror(msg);
       toast.error(msg);
+      throw error;
+    } finally {
+      setloading(false);
+    }
+  };
+  const verifyLoginOtp = async ({ userId, otp }) => {
+    setloading(true);
+    seterror(null);
+    try {
+      const res = await axiosInstance.post("/user/verify-login-otp", {
+        userId,
+        otp,
+      });
+      const { data, token } = res.data;
+      localStorage.setItem("user", JSON.stringify({ ...data, token }));
+      setUser(data);
+      toast.success("Login Successful");
+    } catch (error) {
+      const msg = error.response?.data?.message || "OTP verification failed";
+      seterror(msg);
+      toast.error(msg);
+      throw error;
+    } finally {
+      setloading(false);
     }
   };
   const Logout = () => {
@@ -60,7 +93,7 @@ useEffect(() => {
   };
   return (
     <AuthContext.Provider
-      value={{ user, Signup, Login, Logout, loading, error }}
+      value={{ user, Signup, Login, verifyLoginOtp, Logout, loading, error }}
     >
       {children}
     </AuthContext.Provider>

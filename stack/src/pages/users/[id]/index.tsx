@@ -15,30 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { Calendar, Edit, Plus, X } from "lucide-react";
+import { Calendar, Coins, Edit, Monitor, Plus, Smartphone, X } from "lucide-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-const getUserData = (id: string) => {
-  const users = {
-    "1": {
-      id: 1,
-      name: "John Doe",
-      joinDate: "2019-03-15",
-      about:
-        "Full-stack developer with 8+ years of experience in JavaScript, React, and Node.js. Passionate about clean code and helping others learn programming. I enjoy working on open-source projects and contributing to the developer community.",
-      tags: [
-        "javascript",
-        "react",
-        "node.js",
-        "typescript",
-        "python",
-        "mongodb",
-      ],
-    },
-  };
-  return users[id as keyof typeof users] || users["1"];
-};
 const index = () => {
   const { user } = useAuth();
   const router = useRouter();
@@ -52,6 +32,19 @@ const index = () => {
     tags: users?.tags || [],
   });
   const [newTag, setNewTag] = useState("");
+
+  // ---- Task 4: reward points (sourced from the real Points collection) ----
+  const [profilePoints, setProfilePoints] = useState<number | null>(null);
+  const [pointsLoading, setPointsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [transferTarget, setTransferTarget] = useState<any>(null);
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferLoading, setTransferLoading] = useState(false);
+
+  // ---- Task 5: login history state (owner-only) ----
+  const [loginHistory, setLoginHistory] = useState<any[]>([]);
+  const [loginHistoryLoading, setLoginHistoryLoading] = useState(false);
 
   useEffect(() => {
     const fetchuser = async () => {
@@ -67,6 +60,60 @@ const index = () => {
     };
     fetchuser();
   }, [id]);
+
+  // Reward points are public — anyone viewing this profile sees this user's total,
+  // same as the Reward Tab, since both now read from the same Points collection.
+  useEffect(() => {
+    const fetchPoints = async () => {
+      if (!id) return;
+      setPointsLoading(true);
+      try {
+        const res = await axiosInstance.get(`/points/user/${id}`);
+        setProfilePoints(res.data.totalPoints ?? 0);
+      } catch (error) {
+        console.log(error);
+        setProfilePoints(0);
+      } finally {
+        setPointsLoading(false);
+      }
+    };
+    fetchPoints();
+  }, [id]);
+
+  // Debounced search against your real /points/search endpoint (owner only, for transfers)
+  useEffect(() => {
+    if (!searchTerm || searchTerm.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await axiosInstance.get("/points/search", {
+          params: { name: searchTerm.trim() },
+        });
+        setSearchResults(res.data.users || []);
+      } catch (error) {
+        console.log(error);
+      }
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const fetchLoginHistory = async () => {
+      if (!user?._id || id !== user._id) return;
+      setLoginHistoryLoading(true);
+      try {
+        const res = await axiosInstance.get(`/user/login-history/${user._id}`);
+        setLoginHistory(res.data.data || []);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoginHistoryLoading(false);
+      }
+    };
+    fetchLoginHistory();
+  }, [id, user?._id]);
   if (loading) {
     return (
       <Mainlayout>
@@ -98,6 +145,32 @@ const index = () => {
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong");
+    }
+  };
+
+  const handleTransferPoints = async () => {
+    if (!transferTarget) return;
+    const amount = parseInt(transferAmount, 10);
+    if (!amount || amount <= 0) {
+      toast.error("Enter a valid number of points");
+      return;
+    }
+    setTransferLoading(true);
+    try {
+      const res = await axiosInstance.post("/points/transfer", {
+        toUserid: transferTarget._id,
+        amount,
+      });
+      toast.success(res.data.message || "Points transferred!");
+      setProfilePoints(res.data.newBalance);
+      setTransferTarget(null);
+      setSearchTerm("");
+      setSearchResults([]);
+      setTransferAmount("");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Transfer failed");
+    } finally {
+      setTransferLoading(false);
     }
   };
 
@@ -309,6 +382,130 @@ const index = () => {
             </Card>
           </div>
           <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Coins className="w-5 h-5 text-yellow-500" />
+                  Reward Points
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-800 mb-1">
+                  {pointsLoading ? "..." : profilePoints ?? 0}
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Earn 5 points for every answer you post, plus a 5-point
+                  bonus every time an answer's upvotes cross a multiple of 5.
+                </p>
+
+                {isOwnProfile && (
+                  <div className="border-t pt-4 mt-2">
+                    <h4 className="text-sm font-semibold mb-2">
+                      Transfer Points
+                    </h4>
+                    {(profilePoints ?? 0) <= 10 ? (
+                      <p className="text-xs text-gray-500">
+                        You need more than 10 points to transfer points to
+                        another user.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="Search user by name..."
+                          value={searchTerm}
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setTransferTarget(null);
+                          }}
+                        />
+                        {searchTerm && !transferTarget && searchResults.length > 0 && (
+                          <div className="border rounded max-h-40 overflow-y-auto bg-white">
+                            {searchResults.map((u) => (
+                              <button
+                                key={u._id}
+                                type="button"
+                                onClick={() => {
+                                  setTransferTarget(u);
+                                  setSearchTerm(u.name);
+                                  setSearchResults([]);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                              >
+                                {u.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder="Points to transfer"
+                          value={transferAmount}
+                          onChange={(e) => setTransferAmount(e.target.value)}
+                        />
+                        <Button
+                          onClick={handleTransferPoints}
+                          disabled={
+                            !transferTarget || !transferAmount || transferLoading
+                          }
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          {transferLoading ? "Sending..." : "Transfer"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {isOwnProfile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Monitor className="w-5 h-5 text-gray-500" />
+                    Login History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loginHistoryLoading ? (
+                    <p className="text-sm text-gray-500">Loading...</p>
+                  ) : loginHistory.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      No login history recorded yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-3 max-h-72 overflow-y-auto">
+                      {loginHistory.map((entry: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex items-start gap-3 text-sm border-b last:border-b-0 pb-3 last:pb-0"
+                        >
+                          {entry.deviceType === "mobile" ? (
+                            <Smartphone className="w-4 h-4 mt-0.5 text-gray-400 shrink-0" />
+                          ) : (
+                            <Monitor className="w-4 h-4 mt-0.5 text-gray-400 shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <div className="font-medium text-gray-800">
+                              {entry.browser} on {entry.os} (
+                              {entry.deviceType})
+                            </div>
+                            <div className="text-gray-500 text-xs">
+                              IP: {entry.ip}
+                            </div>
+                            <div className="text-gray-500 text-xs">
+                              {new Date(entry.loginAt).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Top Tags</CardTitle>
