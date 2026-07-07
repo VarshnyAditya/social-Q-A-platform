@@ -1,7 +1,12 @@
 import React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 const RightSideBar = () => {
+  const { user } = useAuth();
+  const tags: string[] = user?.tags || [];
   return (
     <aside className="w-72 lg:w-80 p-4 lg:p-6 bg-gray-50 min-h-screen">
       <div className="space-y-4 lg:space-y-6">
@@ -66,21 +71,40 @@ const RightSideBar = () => {
           <h3 className="font-semibold text-gray-800 mb-3 text-sm lg:text-base">
             Watched Tags
           </h3>
-          <div className="flex items-center justify-center py-6 lg:py-8">
-            <div className="text-center">
-              <Eye className="w-10 h-10 lg:w-12 lg:h-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-xs lg:text-sm text-gray-500 mb-3">
-                Watch tags to curate your list of questions.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-blue-600 border-blue-600 hover:bg-blue-50 bg-transparent text-xs lg:text-sm"
-              >
-                👁️ Watch a tag
-              </Button>
+          {tags.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.map((tag) => (
+                <Link key={tag} href={`/questions?tag=${encodeURIComponent(tag)}`}>
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer"
+                  >
+                    {tag}
+                  </Badge>
+                </Link>
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center py-6 lg:py-8">
+              <div className="text-center">
+                <Eye className="w-10 h-10 lg:w-12 lg:h-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-xs lg:text-sm text-gray-500 mb-3">
+                  {user
+                    ? "Add tags to your profile to watch them here."
+                    : "Log in and add tags to your profile to curate your list of questions."}
+                </p>
+                <Link href={user ? `/users/${user._id}` : "/auth"}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50 bg-transparent text-xs lg:text-sm"
+                  >
+                    {user ? "👁️ Add a tag" : "👁️ Log in"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </aside>

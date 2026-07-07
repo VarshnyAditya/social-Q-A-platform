@@ -1,90 +1,114 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Mainlayout from "@/layout/Mainlayout";
+import { useAuth } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { Flame, MessageSquare, Sparkles, ThumbsUp, Users } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-const questions = [
-  {
-    id: 1,
-    votes: 0,
-    answers: 0,
-    views: 3,
-    title:
-      "Mouse Cursor in 16-bit Assembly (NASM) Overwrites Screen Content in VGA Mode 0x12",
-    content:
-      "I'm developing a PS/2 mouse driver in 16-bit assembly (NASM) for a custom operating system running in VGA mode 0x12 (640x480, 16 colors). The driver initializes the mouse, handles mouse events, and ...",
-    tags: ["assembly", "operating-system", "driver", "osdev"],
-    author: "PR0X",
-    authorId: 1,
-    authorRep: 3,
-    timeAgo: "2 mins ago",
-  },
-  {
-    id: 2,
-    votes: 0,
-    answers: 1,
-    views: 12,
-    title:
-      "Template specialization inside a template class using class template parameters",
-    content:
-      "template<typename TypA, typename TypX> struct MyClass { using TypAlias = TypA<TypX>; // error: 'TypA' is not a template [-Wtemplate-body] }; MyClass is very often specialized like ...",
-    tags: ["c++", "templates"],
-    author: "Felix.leg",
-    authorId: 2,
-    authorRep: 799,
-    timeAgo: "11 mins ago",
-  },
-  {
-    id: 3,
-    votes: -2,
-    answers: 0,
-    views: 13,
-    title: "How can i block user with middleware?",
-    content:
-      "The problem I am trying to create a complete user login form in NextJS and I want to block the user to go to other pages without a login process before. So online i found that one of the most complete ...",
-    tags: ["node.js", "forms", "authentication", "next.js", "middleware"],
-    author: "Aledi5",
-    authorId: 3,
-    authorRep: 31,
-    timeAgo: "20 mins ago",
-  },
-  {
-    id: 4,
-    votes: 0,
-    answers: 0,
-    views: 6,
-    title:
-      "call:fail action: private-web3-wallet-v2-o pen-wallet-connect, error: Pairing error: Subscribe error: Timed out waiting for 60000 ms /what it means",
-    content:
-      "Can't connect my web3 wallet with a dApp. A message pops: Accounts must be CAIP-10 compliant The error message reads: call:fail action: private-web3-wallet-v2-o pen-wallet-connect, error: Pairing ...",
-    tags: ["web3", "wallet", "blockchain"],
-    author: "CryptoUser",
-    authorId: 4,
-    authorRep: 1,
-    timeAgo: "25 mins ago",
-  },
-];
-export default function Home() {
-  const [question, setquestion] = useState<any>(null);
-  const [loading, setloading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"newest" | "active" | "unanswered">("newest");
-  const router = useRouter();
+const getAnswerNetVotes = (q: any) =>
+  (q.answer || []).reduce(
+    (sum: number, a: any) => sum + (a.upvote?.length || 0) - (a.downvote?.length || 0),
+    0
+  );
+
+const getEngagementScore = (q: any) => {
+  const qNet = (q.upvote?.length || 0) - (q.downvote?.length || 0);
+  const aNet = getAnswerNetVotes(q);
+  return qNet + aNet + (q.answer?.length || 0) * 2;
+};
+
+const QuestionRow = ({ question, badge }: { question: any; badge?: string }) => (
+  <div className="border-b border-gray-200 py-3 last:border-b-0">
+    <div className="flex items-start gap-3">
+      <div className="flex flex-col items-center text-xs text-gray-600 w-12 shrink-0">
+        <div className="font-medium">
+          {(question.upvote?.length || 0) -
+            (question.downvote?.length || 0) +
+            getAnswerNetVotes(question)}
+        </div>
+        <div>votes</div>
+        <div
+          className={`mt-1 font-medium ${
+            question.answer?.length > 0 ? "text-green-600" : ""
+          }`}
+        >
+          {question.answer?.length || 0}
+        </div>
+        <div>ans</div>
+      </div>
+      <div className="min-w-0 flex-1">
+        {badge && (
+          <Badge variant="secondary" className="mb-1 text-xs bg-orange-100 text-orange-700">
+            {badge}
+          </Badge>
+        )}
+        <Link
+          href={`/questions/${question._id}`}
+          className="block text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          {question.questiontitle}
+        </Link>
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {(question.questiontags || []).slice(0, 4).map((tag: string) => (
+            <Link key={tag} href={`/questions?tag=${encodeURIComponent(tag)}`}>
+              <Badge
+                variant="secondary"
+                className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
+              >
+                {tag}
+              </Badge>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+export default function HomePage() {
+  const { user } = useAuth();
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [userCount, setUserCount] = useState(0);
+  const [myPoints, setMyPoints] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchquestion = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await axiosInstance.get("/question/getallquestion");
-        setquestion(res.data.data);
+        const [qRes, pRes, uRes] = await Promise.all([
+          axiosInstance.get("/question/getallquestion"),
+          axiosInstance.get("/social/posts"),
+          axiosInstance.get("/user/getalluser"),
+        ]);
+        setQuestions(qRes.data.data || []);
+        setPosts(pRes.data.data || []);
+        setUserCount((uRes.data.data || []).length);
       } catch (error) {
         console.log(error);
       } finally {
-        setloading(false);
+        setLoading(false);
       }
     };
-    fetchquestion();
+    fetchAll();
   }, []);
+
+  useEffect(() => {
+    const fetchMyPoints = async () => {
+      if (!user?._id) return;
+      try {
+        const res = await axiosInstance.get(`/points/user/${user._id}`);
+        setMyPoints(res.data.totalPoints ?? 0);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchMyPoints();
+  }, [user?._id]);
+
   if (loading) {
     return (
       <Mainlayout>
@@ -92,168 +116,173 @@ export default function Home() {
       </Mainlayout>
     );
   }
-  if (!question || question.length === 0) {
-    return (
-      <Mainlayout>
-        <div className="text-center text-gray-500 mt-4">No question found.</div>
-      </Mainlayout>
-    );
-  }
 
-  // ---- Tab filtering/sorting (Newest / Active / Unanswered) ----
-  const getLastActivity = (q: any) => {
-    const answerDates = (q.answer || []).map((a: any) => new Date(a.answeredon).getTime());
-    return Math.max(new Date(q.askedon).getTime(), ...answerDates, 0);
-  };
+  const totalAnswers = questions.reduce((sum, q) => sum + (q.answer?.length || 0), 0);
 
-  const getDisplayedQuestions = () => {
-    const list = [...question];
-    if (activeTab === "unanswered") {
-      return list
-        .filter((q: any) => (q.answer?.length || 0) === 0)
-        .sort((a: any, b: any) => new Date(b.askedon).getTime() - new Date(a.askedon).getTime());
-    }
-    if (activeTab === "active") {
-      return list.sort((a: any, b: any) => getLastActivity(b) - getLastActivity(a));
-    }
-    // newest (default)
-    return list.sort(
-      (a: any, b: any) => new Date(b.askedon).getTime() - new Date(a.askedon).getTime()
-    );
-  };
+  const interestingPosts = (() => {
+    const userTags = (user?.tags || []).map((t: string) => t.toLowerCase());
+    return [...questions]
+      .map((q) => ({
+        q,
+        tagMatches: userTags.length
+          ? (q.questiontags || []).filter((t: string) => userTags.includes(t.toLowerCase()))
+              .length
+          : 0,
+        engagement: getEngagementScore(q),
+      }))
+      .sort((a, b) => b.tagMatches - a.tagMatches || b.engagement - a.engagement)
+      .slice(0, 6)
+      .map((s) => s.q);
+  })();
 
-  const displayedQuestions = getDisplayedQuestions();
+  const trendingPosts = (() => {
+    const now = Date.now();
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    let recent = questions.filter((q) => now - new Date(q.askedon).getTime() <= sevenDays);
+    if (recent.length < 3) recent = questions;
+    return [...recent].sort((a, b) => getEngagementScore(b) - getEngagementScore(a)).slice(0, 5);
+  })();
 
-  const tabButtonClass = (tab: string) =>
-    `px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
-      activeTab === tab
-        ? "bg-gray-200 text-gray-700 font-medium"
-        : "text-gray-600 hover:bg-gray-100"
-    }`;
+  const recentPosts = [...posts]
+    .sort((a, b) => new Date(b.postedon).getTime() - new Date(a.postedon).getTime())
+    .slice(0, 3);
 
   return (
     <Mainlayout>
-      <main className="min-w-0 p-4 lg:p-6 ">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-xl lg:text-2xl font-semibold">Top Questions</h1>
-          <button
-            onClick={() => router.push("/ask")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium whitespace-nowrap"
-          >
-            Ask Question
-          </button>
-        </div>
-        <div className="w-full">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4 text-sm gap-2 sm:gap-4">
-            <span className="text-gray-600">{displayedQuestions.length} questions</span>
-            <div className="flex flex-wrap gap-1 sm:gap-2">
-              <button
-                onClick={() => setActiveTab("newest")}
-                className={tabButtonClass("newest")}
-              >
-                Newest
-              </button>
-              <button
-                onClick={() => setActiveTab("active")}
-                className={tabButtonClass("active")}
-              >
-                Active
-              </button>
-              <button
-                onClick={() => setActiveTab("unanswered")}
-                className={tabButtonClass("unanswered")}
-              >
-                Unanswered
-              </button>
+      <main className="min-w-0 p-4 lg:p-6 space-y-8">
+        {/* Hero */}
+        <div className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 text-white p-6">
+          {user ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-xl lg:text-2xl font-bold">Welcome back, {user.name}</h1>
+                <p className="text-sm opacity-90 mt-1">
+                  {myPoints !== null ? `${myPoints} reward points` : "Loading your points..."}
+                  {" · "}
+                  Here's what's happening in the community today.
+                </p>
+              </div>
+              <Link href="/ask">
+                <Button className="bg-white text-orange-600 hover:bg-gray-100 whitespace-nowrap">
+                  Ask a Question
+                </Button>
+              </Link>
             </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-xl lg:text-2xl font-bold">Welcome to CodeQuest</h1>
+                <p className="text-sm opacity-90 mt-1">
+                  Join the community to ask questions, share answers, and earn reputation.
+                </p>
+              </div>
+              <Link href="/signup">
+                <Button className="bg-white text-orange-600 hover:bg-gray-100 whitespace-nowrap">
+                  Join the Community
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Community stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="border border-gray-200 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold text-gray-800">{questions.length}</div>
+            <div className="text-xs text-gray-500">Questions</div>
           </div>
-          <div className="space-y-4">
-            {displayedQuestions.length === 0 ? (
-              <div className="text-center text-gray-500 py-8 text-sm">
-                No questions match this filter.
-              </div>
+          <div className="border border-gray-200 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold text-gray-800">{totalAnswers}</div>
+            <div className="text-xs text-gray-500">Answers</div>
+          </div>
+          <div className="border border-gray-200 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold text-gray-800">{userCount}</div>
+            <div className="text-xs text-gray-500">Members</div>
+          </div>
+          <div className="border border-gray-200 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold text-gray-800">{posts.length}</div>
+            <div className="text-xs text-gray-500">Community Posts</div>
+          </div>
+        </div>
+
+        {/* Interesting posts for you */}
+        <section>
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-5 h-5 text-orange-500" />
+            <h2 className="text-lg font-semibold text-gray-800">Interesting posts for you</h2>
+          </div>
+          <p className="text-xs text-gray-500 mb-2">
+            {user?.tags?.length
+              ? `Matched to your tags: ${user.tags.slice(0, 5).join(", ")}`
+              : "Add tags to your profile to personalize this list — showing top community activity for now."}
+          </p>
+          <div className="border border-gray-200 rounded-lg px-4">
+            {interestingPosts.length === 0 ? (
+              <p className="text-sm text-gray-500 py-6 text-center">No questions yet.</p>
             ) : (
-              displayedQuestions.map((question: any) => (
-              <div key={question._id} className="border-b border-gray-200 pb-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex sm:flex-col items-center sm:items-center text-sm text-gray-600 sm:w-16 lg:w-20 gap-4 sm:gap-2">
-                    <div className="text-center">
-                      <div className="font-medium">
-                        {question.answer.reduce(
-                          (sum: number, ans: any) =>
-                            sum + ((ans.upvote?.length || 0) - (ans.downvote?.length || 0)),
-                          0
-                        )}
-                      </div>
-                      <div className="text-xs">votes</div>
-                    </div>
-                    <div className="text-center">
-                      <div
-                        className={`font-medium ${
-                          question.answer.length > 0
-                            ? "text-green-600 bg-green-100 px-2 py-1 rounded"
-                            : ""
-                        }`}
-                      >
-                        {question.answer.length}
-                      </div>
-                      <div className="text-xs">
-                        {question.answer.length === 1
-                          ? "answer"
-                          : "answers"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/questions/${question._id}`}
-                      className="text-blue-600 hover:text-blue-800 text-base lg:text-lg font-medium mb-2 block"
-                    >
-                      {question.questiontitle}
-                    </Link>
-                    <p className="text-gray-700 text-sm mb-3 line-clamp-2">
-                      {question.questionbody}
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                      <div className="flex flex-wrap gap-1">
-                        {question.questiontags.map((tag: any) => (
-                          <div key={tag}>
-                            <Badge
-                              variant="secondary"
-                              className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer"
-                            >
-                              {tag}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center text-xs text-gray-600 flex-shrink-0">
-                        <Link
-                          href={`/users/${question.userid}`}
-                          className="flex items-center"
-                        >
-                          <Avatar className="w-4 h-4 mr-1">
-                            <AvatarFallback className="text-xs">
-                              {question.userposted[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-blue-600 hover:text-blue-800 mr-1">
-                            {question.userposted}
-                          </span>
-                        </Link>
-
-                        <span>asked {new Date(question.askedon).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
+              interestingPosts.map((q) => <QuestionRow key={q._id} question={q} />)
             )}
           </div>
-        </div>
+        </section>
+
+        {/* Trending this week */}
+        <section>
+          <div className="flex items-center gap-2 mb-2">
+            <Flame className="w-5 h-5 text-red-500" />
+            <h2 className="text-lg font-semibold text-gray-800">Trending this week</h2>
+          </div>
+          <div className="border border-gray-200 rounded-lg px-4">
+            {trendingPosts.length === 0 ? (
+              <p className="text-sm text-gray-500 py-6 text-center">Nothing trending yet.</p>
+            ) : (
+              trendingPosts.map((q) => <QuestionRow key={q._id} question={q} badge="🔥 Hot" />)
+            )}
+          </div>
+        </section>
+
+        {/* From the community (social feed preview) */}
+        <section>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-500" />
+              <h2 className="text-lg font-semibold text-gray-800">From the community</h2>
+            </div>
+            <Link href="/social" className="text-sm text-blue-600 hover:underline">
+              View all activity →
+            </Link>
+          </div>
+          {recentPosts.length === 0 ? (
+            <p className="text-sm text-gray-500 py-6 text-center border border-gray-200 rounded-lg">
+              No community posts yet.
+            </p>
+          ) : (
+            <div className="grid sm:grid-cols-3 gap-3">
+              {recentPosts.map((post: any) => (
+                <div key={post._id} className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Avatar className="w-6 h-6">
+                      <AvatarFallback className="text-xs">
+                        {post.username?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium text-gray-800">{post.username}</span>
+                  </div>
+                  <p className="text-sm text-gray-700 line-clamp-3">{post.content}</p>
+                  <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <ThumbsUp className="w-3 h-3" />
+                      {post.likes?.length || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" />
+                      {post.comments?.length || 0}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </Mainlayout>
   );
