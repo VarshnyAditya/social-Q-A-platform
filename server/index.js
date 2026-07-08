@@ -10,6 +10,7 @@ import answerroutes from "./routes/answer.js";
 import socialroutes from "./routes/social.js";
 import subscriptionroutes from "./routes/subscription.js";
 import pointsroutes from "./routes/points.js";
+import articleroutes from "./routes/article.js";
 
 const app = express();
 app.use(express.json({ limit: "30mb", extended: true }));
@@ -26,6 +27,7 @@ app.use("/answer", answerroutes);
 app.use("/social", socialroutes);
 app.use("/subscription", subscriptionroutes);
 app.use("/points", pointsroutes);
+app.use("/article", articleroutes);
 
 const PORT = process.env.PORT || 5000;
 const databaseurl = process.env.MONGODB_URL;

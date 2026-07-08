@@ -93,7 +93,7 @@ const Sidebar = ({ isopen }: any) => {
               </Link>
             </li>
             <li>
-              <Link href="#" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
+              <Link href="/articles" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <FileText className="w-4 h-4 mr-2 lg:mr-3" />
                 Articles
               </Link>
