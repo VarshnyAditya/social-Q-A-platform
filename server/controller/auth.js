@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import user from "../models/auth.js";
+import question from "../models/question.js";
+import socialpost from "../models/social.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UAParser } from "ua-parser-js";
@@ -211,11 +213,36 @@ export const updateprofile = async (req, res) => {
     return res.status(400).json({ message: "User unavailable" });
   }
   try {
+    const beforeUpdate = await user.findById(_id).select("name");
+    const nameChanged = beforeUpdate && beforeUpdate.name !== name;
+
     const updateprofile = await user.findByIdAndUpdate(
       _id,
       { $set: { name, about, tags, phone: phone || "" } },
       { new: true }
     );
+
+    // Name is denormalized (copied) onto every question, answer and social
+    // post/comment the user has ever made, so a rename doesn't retroactively
+    // show up there unless we backfill those copies too.
+    if (nameChanged) {
+      const userIdStr = _id.toString();
+      await Promise.all([
+        question.updateMany({ userid: userIdStr }, { $set: { userposted: name } }),
+        question.updateMany(
+          { "answer.userid": userIdStr },
+          { $set: { "answer.$[elem].useranswered": name } },
+          { arrayFilters: [{ "elem.userid": userIdStr }] }
+        ),
+        socialpost.updateMany({ userid: userIdStr }, { $set: { username: name } }),
+        socialpost.updateMany(
+          { "comments.userid": userIdStr },
+          { $set: { "comments.$[elem].username": name } },
+          { arrayFilters: [{ "elem.userid": userIdStr }] }
+        ),
+      ]);
+    }
+
     res.status(200).json({ data: updateprofile });
   } catch (error) {
     res.status(500).json("something went wrong..");

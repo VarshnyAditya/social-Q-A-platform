@@ -91,9 +91,22 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     toast.info("Logged out");
   };
+
+  // Merges partial changes (e.g. from editing a profile) into both the live
+  // user object and its localStorage copy, so anything reading useAuth().user
+  // — navbar avatar, welcome text, etc — reflects the change immediately
+  // instead of only updating after the next login.
+  const updateUser = (partialUser) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...partialUser };
+      localStorage.setItem("user", JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, Signup, Login, verifyLoginOtp, Logout, loading, error }}
+      value={{ user, Signup, Login, verifyLoginOtp, Logout, updateUser, loading, error }}
     >
       {children}
     </AuthContext.Provider>

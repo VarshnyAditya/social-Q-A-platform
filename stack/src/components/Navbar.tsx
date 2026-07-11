@@ -10,9 +10,11 @@ import {
   FileText,
   Menu,
   MessageSquareIcon,
+  PanelRight,
   Search,
   Tag,
   Trophy,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -67,12 +69,13 @@ const PRODUCT_ITEMS = [
   },
 ];
 
-const Navbar = ({ handleslidein }: any) => {
+const Navbar = ({ onToggleLeft, onToggleRight }: any) => {
   const { user, Logout } = useAuth();
   const { t } = useLanguage();
   const [hasMounted, setHasMounted] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [teamsOpen, setTeamsOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const productsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -95,12 +98,12 @@ const Navbar = ({ handleslidein }: any) => {
   };
 
   return (
-    <div className="relative top-0 z-50 w-full min-h-[53px] bg-white border-t-[3px] border-[#ef8236] shadow-[0_1px_5px_#00000033] flex items-center justify-center">
+    <div className="relative top-0 z-50 w-full min-h-[53px] bg-white border-t-[3px] border-[#ef8236] shadow-[0_1px_5px_#00000033] flex flex-col items-center">
       <div className="w-[90%] max-w-[1440px] flex items-center justify-between mx-auto py-1">
         <button
-          aria-label="Toggle sidebar"
-          className="sm:block md:hidden p-2 rounded hover:bg-gray-100 transition"
-          onClick={handleslidein}
+          aria-label="Toggle left sidebar"
+          className="block p-2 rounded hover:bg-gray-100 transition"
+          onClick={onToggleLeft}
         >
           <Menu className="w-5 h-5 text-gray-800" />
         </button>
@@ -215,6 +218,24 @@ const Navbar = ({ handleslidein }: any) => {
           </form>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            aria-label="Toggle search"
+            className="lg:hidden p-2 rounded hover:bg-gray-100 transition"
+            onClick={() => setMobileSearchOpen((s) => !s)}
+          >
+            {mobileSearchOpen ? (
+              <X className="w-5 h-5 text-gray-800" />
+            ) : (
+              <Search className="w-5 h-5 text-gray-800" />
+            )}
+          </button>
+          <button
+            aria-label="Toggle right sidebar"
+            className="p-2 rounded hover:bg-gray-100 transition"
+            onClick={onToggleRight}
+          >
+            <PanelRight className="w-5 h-5 text-gray-800" />
+          </button>
           <LanguageSwitcher />
            {!hasMounted ? null : !user ? (
             <Link
@@ -242,6 +263,21 @@ const Navbar = ({ handleslidein }: any) => {
           )}
         </div>
       </div>
+
+      {/* Mobile search — full-width row that expands below the navbar on small screens */}
+      {mobileSearchOpen && (
+        <div className="lg:hidden w-[90%] max-w-[1440px] mx-auto pb-2">
+          <div className="relative">
+            <input
+              type="text"
+              autoFocus
+              placeholder={`${t("common.search")}...`}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
+            />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-600" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

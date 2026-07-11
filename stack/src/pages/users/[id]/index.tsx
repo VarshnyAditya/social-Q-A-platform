@@ -20,7 +20,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 const index = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const router = useRouter();
   const { id } = router.query;
   const [users, setusers] = useState<any>(null);
@@ -139,6 +139,9 @@ const index = () => {
         };
 
         setusers(updatedUser);
+        // Keep the navbar avatar, welcome text, etc in sync immediately —
+        // otherwise they'd stay stale until the next login.
+        updateUser({ name: editForm.name, about: editForm.about, tags: editForm.tags });
         setIsEditing(false);
         toast.success("Profile updated successfully!");
       }

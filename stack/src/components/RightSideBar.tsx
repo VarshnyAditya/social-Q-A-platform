@@ -4,11 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-const RightSideBar = () => {
+import { cn } from "@/lib/utils";
+
+const RightSideBar = ({ isopen, isMobile }: any) => {
   const { user } = useAuth();
   const tags: string[] = user?.tags || [];
   return (
-    <aside className="w-72 lg:w-80 p-4 lg:p-6 bg-gray-50 min-h-screen">
+    <aside
+      className={cn(
+        "bg-gray-50 border-l border-gray-200 transition-all duration-300 ease-in-out overflow-hidden",
+        isMobile
+          ? cn(
+              "fixed top-[53px] right-0 h-[calc(100vh-53px)] w-72 z-40",
+              isopen ? "translate-x-0" : "translate-x-full"
+            )
+          : cn(
+              "h-full",
+              isopen ? "w-72 lg:w-80 opacity-100" : "w-0 opacity-0 pointer-events-none border-l-0"
+            )
+      )}
+    >
+      <div className="p-4 lg:p-6 w-72 lg:w-80 h-full overflow-y-auto">
       <div className="space-y-4 lg:space-y-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded p-3 lg:p-4">
           <h3 className="font-semibold text-gray-800 mb-3 text-sm lg:text-base">
@@ -106,6 +122,7 @@ const RightSideBar = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </aside>
   );

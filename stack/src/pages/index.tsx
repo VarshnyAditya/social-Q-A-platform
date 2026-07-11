@@ -42,9 +42,8 @@ const QuestionRow = ({
         </div>
         <div>votes</div>
         <div
-          className={`mt-1 font-medium ${
-            question.answer?.length > 0 ? "text-green-600" : ""
-          }`}
+          className={`mt-1 font-medium ${question.answer?.length > 0 ? "text-green-600" : ""
+            }`}
         >
           {question.answer?.length || 0}
         </div>
@@ -170,7 +169,7 @@ export default function HomePage() {
         q,
         tagMatches: userTags.length
           ? (q.questiontags || []).filter((t: string) => userTags.includes(t.toLowerCase()))
-              .length
+            .length
           : 0,
         engagement: getEngagementScore(q),
       }))
@@ -230,24 +229,33 @@ export default function HomePage() {
         </div>
 
         {/* Community stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="border border-gray-200 rounded-lg p-4 text-center">
-            <div className="text-xl font-bold text-gray-800">{questions.length}</div>
-            <div className="text-xs text-gray-500">Questions</div>
+        <section>
+          <div className="flex items-center gap-2 mb-1">
+            <Users className="w-5 h-5 text-blue-500" />
+            <h2 className="text-lg font-semibold text-gray-800">Community at a Glance</h2>
           </div>
-          <div className="border border-gray-200 rounded-lg p-4 text-center">
-            <div className="text-xl font-bold text-gray-800">{totalAnswers}</div>
-            <div className="text-xs text-gray-500">Answers</div>
+          <p className="text-xs text-gray-500 mb-2">
+            Totals across all of CodeQuest — not just your activity.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <div className="text-xl font-bold text-gray-800">{questions.length}</div>
+              <div className="text-xs text-gray-500">Total Questions</div>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <div className="text-xl font-bold text-gray-800">{totalAnswers}</div>
+              <div className="text-xs text-gray-500">Total Answers</div>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <div className="text-xl font-bold text-gray-800">{userCount}</div>
+              <div className="text-xs text-gray-500">Total Members</div>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <div className="text-xl font-bold text-gray-800">{posts.length}</div>
+              <div className="text-xs text-gray-500">Community Posts</div>
+            </div>
           </div>
-          <div className="border border-gray-200 rounded-lg p-4 text-center">
-            <div className="text-xl font-bold text-gray-800">{userCount}</div>
-            <div className="text-xs text-gray-500">Members</div>
-          </div>
-          <div className="border border-gray-200 rounded-lg p-4 text-center">
-            <div className="text-xl font-bold text-gray-800">{posts.length}</div>
-            <div className="text-xs text-gray-500">Community Posts</div>
-          </div>
-        </div>
+        </section>
 
         {/* Interesting posts for you */}
         <section>
