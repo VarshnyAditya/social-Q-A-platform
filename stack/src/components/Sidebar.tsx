@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/LanguageContext";
 import {
   Bookmark,
   Bot,
@@ -18,6 +19,7 @@ import React from "react";
 import { Badge } from "./ui/badge";
 
 const Sidebar = ({ isopen }: any) => {
+  const { t } = useLanguage();
   return (
     <div>
       <aside
@@ -31,77 +33,77 @@ const Sidebar = ({ isopen }: any) => {
             <li>
               <Link href="/" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <Home className="w-4 h-4 mr-2 lg:mr-3" />
-                Home
+                {t("nav.home")}
               </Link>
             </li>
             <li>
               <Link href="/questions" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <MessageSquareIcon className="w-4 h-4 mr-2 lg:mr-3" />
-                Questions
+                {t("nav.questions")}
               </Link>
             </li>
             <li>
               <Link href="/ai-assist" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <Bot className="w-4 h-4 mr-2 lg:mr-3" />
-                AI Assist
+                {t("nav.aiAssist")}
                 <Badge variant="secondary" className="ml-auto text-xs">Labs</Badge>
               </Link>
             </li>
             <li>
               <Link href="/tags" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <Tag className="w-4 h-4 mr-2 lg:mr-3" />
-                Tags
+                {t("nav.tags")}
               </Link>
             </li>
             <li>
               <Link href="/users" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <Users className="w-4 h-4 mr-2 lg:mr-3" />
-                Users
+                {t("nav.users")}
               </Link>
             </li>
             <li>
               <Link href="/subscription" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <CreditCard className="w-4 h-4 mr-2 lg:mr-3" />
-                Subscription
+                {t("nav.subscription")}
                 <Badge variant="secondary" className="ml-auto text-xs bg-yellow-100 text-yellow-800">PRO</Badge>
               </Link>
             </li>
             <li>
               <Link href="/points" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <Star className="w-4 h-4 mr-2 lg:mr-3" />
-                Rewards
+                {t("nav.points")}
                 <Badge variant="secondary" className="ml-auto text-xs bg-green-100 text-green-700">NEW</Badge>
               </Link>
             </li>
             <li>
               <Link href="/saved" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <Bookmark className="w-4 h-4 mr-2 lg:mr-3" />
-                Saves
+                {t("nav.saved")}
               </Link>
             </li>
             <li>
               <Link href="/challenges" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <Trophy className="w-4 h-4 mr-2 lg:mr-3" />
-                Challenges
+                {t("nav.challenges")}
                 <Badge variant="secondary" className="ml-auto text-xs bg-orange-100 text-orange-800">NEW</Badge>
               </Link>
             </li>
             <li>
               <Link href="/social" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <MessageSquare className="w-4 h-4 mr-2 lg:mr-3" />
-                Community
+                {t("nav.social")}
               </Link>
             </li>
             <li>
               <Link href="/articles" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
                 <FileText className="w-4 h-4 mr-2 lg:mr-3" />
-                Articles
+                {t("nav.articles")}
               </Link>
             </li>
             <li>
               <Link href="/companies" className="flex items-center px-2 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm">
               <Building className="w-4 h-4 mr-2 lg:mr-3" />
-              Companies
+              {t("nav.companies")}
               </Link>
             </li>
           </ul>

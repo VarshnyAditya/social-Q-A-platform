@@ -1,4 +1,6 @@
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import {
   Bookmark,
@@ -67,6 +69,7 @@ const PRODUCT_ITEMS = [
 
 const Navbar = ({ handleslidein }: any) => {
   const { user, Logout } = useAuth();
+  const { t } = useLanguage();
   const [hasMounted, setHasMounted] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [teamsOpen, setTeamsOpen] = useState(false);
@@ -205,19 +208,20 @@ const Navbar = ({ handleslidein }: any) => {
           <form className="hidden lg:block flex-grow relative px-3">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={`${t("common.search")}...`}
               className="w-full max-w-[600px] pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
             />
             <Search className="absolute left-4 top-2.5 h-4 w-4 text-gray-600" />
           </form>
         </div>
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
            {!hasMounted ? null : !user ? (
             <Link
               href="/auth"
               className="text-sm font-medium text-[#454545] bg-[#e7f8fe] hover:bg-[#d3e4eb] border border-blue-500 px-4 py-1.5 rounded transition"
             >
-              Log in
+              {t("nav.login")}
             </Link>
           ) : (
             <>
@@ -232,7 +236,7 @@ const Navbar = ({ handleslidein }: any) => {
                 onClick={handlelogout}
                 className="text-sm font-medium text-[#454545] bg-[#e7f8fe] hover:bg-[#d3e4eb] border border-blue-500 px-4 py-1.5 rounded transition"
               >
-                Log out
+                {t("nav.logout")}
               </button>
             </>
           )}

@@ -47,8 +47,11 @@ const getTransporter = () => {
   return transporter;
 };
 
-export const sendOTPEmail = async (toEmail, otp, userName) => {
+export const sendOTPEmail = async (toEmail, otp, userName, purposeText) => {
   const { user } = getCredentials();
+
+  const introText =
+    purposeText || "We received a request to reset your password. Use the OTP below to proceed:";
 
   const mailOptions = {
     from: `"CodeQuest" <${user}>`,
@@ -60,12 +63,12 @@ export const sendOTPEmail = async (toEmail, otp, userName) => {
           <h2 style="color: #f97316; margin: 0;">CodeQuest</h2>
         </div>
         <h3 style="color: #111827;">Hi ${userName},</h3>
-        <p style="color: #6b7280;">We received a request to reset your password. Use the OTP below to proceed:</p>
+        <p style="color: #6b7280;">${introText}</p>
         <div style="background: #f3f4f6; border-radius: 8px; padding: 24px; text-align: center; margin: 24px 0;">
           <span style="font-size: 36px; font-weight: bold; letter-spacing: 12px; color: #1d4ed8;">${otp}</span>
         </div>
         <p style="color: #6b7280; font-size: 14px;">This OTP is valid for <strong>10 minutes</strong>. Do not share it with anyone.</p>
-        <p style="color: #9ca3af; font-size: 12px;">If you did not request this, ignore this email. Your password will remain unchanged.</p>
+        <p style="color: #9ca3af; font-size: 12px;">If you did not request this, ignore this email. No changes will be made to your account.</p>
       </div>
     `,
   };

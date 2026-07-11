@@ -5,6 +5,7 @@ import {
   Clock,
   Flag,
   History,
+  Languages,
   Share,
   Trash,
 } from "lucide-react";
@@ -19,10 +20,12 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/router";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import SaveButton from "./SaveButton";
 
 const QuestionDetail = ({ questionId }: any) => {
   const router = useRouter();
+  const { t, language } = useLanguage();
   const [question, setquestion] = useState<any>(null);
   const [newanswer, setnewAnswer] = useState("");
   const [isSubmitting, setisSubmitting] = useState(false);
@@ -30,6 +33,59 @@ const QuestionDetail = ({ questionId }: any) => {
   const [filter, setFilter] = useState<"newest" | "active" | "unanswered">("newest");
   const [isSaved, setIsSaved] = useState(false);
   const { user } = useAuth();
+
+  // Task 6 — on-demand translation of user-generated content (question/answer
+  // bodies aren't pre-translated like UI text, so they're fetched from the
+  // MyMemory-backed /translate endpoint the first time a user asks for them).
+  const [translatedQuestionBody, setTranslatedQuestionBody] = useState<string | null>(null);
+  const [showTranslatedQuestion, setShowTranslatedQuestion] = useState(false);
+  const [translatingQuestion, setTranslatingQuestion] = useState(false);
+  const [translatedAnswers, setTranslatedAnswers] = useState<Record<string, string>>({});
+  const [showTranslatedAnswers, setShowTranslatedAnswers] = useState<Record<string, boolean>>({});
+  const [translatingAnswerId, setTranslatingAnswerId] = useState<string | null>(null);
+
+  const handleTranslateQuestion = async () => {
+    if (translatedQuestionBody) {
+      setShowTranslatedQuestion((s) => !s);
+      return;
+    }
+    setTranslatingQuestion(true);
+    try {
+      const res = await axiosInstance.post("/translate", {
+        text: question.questionbody,
+        targetLanguage: language,
+      });
+      setTranslatedQuestionBody(res.data.translated);
+      setShowTranslatedQuestion(true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Translation failed");
+    } finally {
+      setTranslatingQuestion(false);
+    }
+  };
+
+  const handleTranslateAnswer = async (ans: any) => {
+    const id = ans._id;
+    if (translatedAnswers[id]) {
+      setShowTranslatedAnswers((s) => ({ ...s, [id]: !s[id] }));
+      return;
+    }
+    setTranslatingAnswerId(id);
+    try {
+      const res = await axiosInstance.post("/translate", {
+        text: ans.answerbody,
+        targetLanguage: language,
+      });
+      setTranslatedAnswers((s) => ({ ...s, [id]: res.data.translated }));
+      setShowTranslatedAnswers((s) => ({ ...s, [id]: true }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Translation failed");
+    } finally {
+      setTranslatingAnswerId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchquestion = async () => {
@@ -61,6 +117,15 @@ const QuestionDetail = ({ questionId }: any) => {
     };
     fetchSavedStatus();
   }, [questionId, user]);
+
+  // If the user switches languages while viewing this question, drop any
+  // cached translations so a stale-language translation isn't shown.
+  useEffect(() => {
+    setTranslatedQuestionBody(null);
+    setShowTranslatedQuestion(false);
+    setTranslatedAnswers({});
+    setShowTranslatedAnswers({});
+  }, [language]);
 
   if (loading) {
     return (
@@ -276,7 +341,13 @@ const QuestionDetail = ({ questionId }: any) => {
               <div className="prose max-w-none mb-6">
                 <div
                   className="text-gray-800 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: renderBody(question.questionbody) }}
+                  dangerouslySetInnerHTML={{
+                    __html: renderBody(
+                      showTranslatedQuestion && translatedQuestionBody
+                        ? translatedQuestionBody
+                        : question.questionbody
+                    ),
+                  }}
                 />
               </div>
               <div className="flex flex-wrap gap-2 mb-6">
@@ -290,20 +361,35 @@ const QuestionDetail = ({ questionId }: any) => {
               </div>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex gap-2">
+                  {language !== "en" && (
+                    <Button
+                      variant="ghost" size="sm"
+                      onClick={handleTranslateQuestion}
+                      disabled={translatingQuestion}
+                      className="text-gray-600 hover:text-gray-800"
+                    >
+                      <Languages className="w-4 h-4 mr-1" />
+                      {translatingQuestion
+                        ? t("language.translating")
+                        : showTranslatedQuestion
+                        ? t("common.showOriginal")
+                        : t("questions.translateThis")}
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                    <Share className="w-4 h-4 mr-1" /> Share
+                    <Share className="w-4 h-4 mr-1" /> {t("common.share")}
                   </Button>
                   <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                    <Flag className="w-4 h-4 mr-1" /> Flag
+                    <Flag className="w-4 h-4 mr-1" /> {t("common.flag")}
                   </Button>
                   {question.userid === user?._id && (
                     <Button variant="ghost" size="sm" onClick={handleDelete} className="text-red-600 hover:text-red-800">
-                      <Trash className="w-4 h-4 mr-1" /> Delete
+                      <Trash className="w-4 h-4 mr-1" /> {t("common.delete")}
                     </Button>
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-gray-600">asked {new Date(question.askedon).toLocaleDateString()}</span>
+                  <span className="text-gray-600">{t("questions.askedOn")} {new Date(question.askedon).toLocaleDateString()}</span>
                   <Link href={`/users/${question.userid}`} className="flex items-center gap-2 hover:bg-blue-50 p-2 rounded">
                     <Avatar className="w-8 h-8">
                       <AvatarFallback className="text-sm">{question.userposted[0]}</AvatarFallback>
@@ -321,7 +407,7 @@ const QuestionDetail = ({ questionId }: any) => {
       <div className="mb-8">
         <div className="flex flex-wrap items-center gap-4 mb-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            {question.answer.length} Answer{question.answer.length !== 1 ? "s" : ""}
+            {question.answer.length} {t("questions.answersCount")}
           </h2>
           <div className="flex gap-1 flex-wrap">
             {(["newest", "active", "unanswered"] as const).map((tab) => (
@@ -334,7 +420,7 @@ const QuestionDetail = ({ questionId }: any) => {
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                {tab}
+                {t(`questions.${tab}`)}
               </button>
             ))}
           </div>
@@ -342,7 +428,7 @@ const QuestionDetail = ({ questionId }: any) => {
 
         <div className="space-y-6">
           {filteredAnswers.length === 0 ? (
-            <p className="text-gray-500 text-sm">No answers match this filter.</p>
+            <p className="text-gray-500 text-sm">{t("questions.noAnswersMatch")}</p>
           ) : (
             filteredAnswers.map((ans: any) => (
               <Card key={ans._id || ans.answeredon}>
@@ -382,16 +468,37 @@ const QuestionDetail = ({ questionId }: any) => {
                       <div className="prose max-w-none mb-6">
                         <div
                           className="text-gray-800 leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: renderBody(ans.answerbody) }}
+                          dangerouslySetInnerHTML={{
+                            __html: renderBody(
+                              showTranslatedAnswers[ans._id] && translatedAnswers[ans._id]
+                                ? translatedAnswers[ans._id]
+                                : ans.answerbody
+                            ),
+                          }}
                         />
                       </div>
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex gap-2">
+                          {language !== "en" && (
+                            <Button
+                              variant="ghost" size="sm"
+                              onClick={() => handleTranslateAnswer(ans)}
+                              disabled={translatingAnswerId === ans._id}
+                              className="text-gray-600 hover:text-gray-800"
+                            >
+                              <Languages className="w-4 h-4 mr-1" />
+                              {translatingAnswerId === ans._id
+                                ? t("language.translating")
+                                : showTranslatedAnswers[ans._id]
+                                ? t("common.showOriginal")
+                                : t("questions.translateThis")}
+                            </Button>
+                          )}
                           <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                            <Share className="w-4 h-4 mr-1" /> Share
+                            <Share className="w-4 h-4 mr-1" /> {t("common.share")}
                           </Button>
                           <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                            <Flag className="w-4 h-4 mr-1" /> Flag
+                            <Flag className="w-4 h-4 mr-1" /> {t("common.flag")}
                           </Button>
                           {ans.userid === user?._id && (
                             <Button
@@ -399,13 +506,13 @@ const QuestionDetail = ({ questionId }: any) => {
                               onClick={() => handleDeleteanswer(ans._id)}
                               className="text-red-600 hover:text-red-800"
                             >
-                              <Trash className="w-4 h-4 mr-1" /> Delete
+                              <Trash className="w-4 h-4 mr-1" /> {t("common.delete")}
                             </Button>
                           )}
                         </div>
                         <div className="flex items-center gap-2 text-sm">
                           <span className="text-gray-600">
-                            answered {new Date(ans.answeredon).toLocaleDateString()}
+                            {t("questions.answeredOn")} {new Date(ans.answeredon).toLocaleDateString()}
                           </span>
                           <Link href={`/users/${ans.userid}`} className="flex items-center gap-2 hover:bg-blue-50 p-2 rounded">
                             <Avatar className="w-8 h-8">
@@ -429,9 +536,9 @@ const QuestionDetail = ({ questionId }: any) => {
       {/* Post Answer */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900">Your Answer</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-900">{t("questions.yourAnswer")}</h3>
           <Textarea
-            placeholder="Write your answer here... You can use Markdown formatting."
+            placeholder={t("questions.writeAnswerPlaceholder")}
             value={newanswer}
             onChange={(e) => setnewAnswer(e.target.value)}
             className="min-h-32 mb-4 resize-none"
@@ -442,13 +549,13 @@ const QuestionDetail = ({ questionId }: any) => {
               disabled={!newanswer.trim() || isSubmitting}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {isSubmitting ? "Posting..." : "Post Your Answer"}
+              {isSubmitting ? t("questions.posting") : t("questions.postYourAnswer")}
             </Button>
             <p className="text-sm text-gray-600">
-              By posting your answer, you agree to the{" "}
-              <Link href="#" className="text-blue-600 hover:underline">privacy policy</Link>{" "}
-              and{" "}
-              <Link href="#" className="text-blue-600 hover:underline">terms of service</Link>.
+              {t("questions.agreeTerms")}{" "}
+              <Link href="#" className="text-blue-600 hover:underline">{t("questions.privacyPolicy")}</Link>{" "}
+              {t("questions.and")}{" "}
+              <Link href="#" className="text-blue-600 hover:underline">{t("questions.termsOfService")}</Link>.
             </p>
           </div>
         </CardContent>

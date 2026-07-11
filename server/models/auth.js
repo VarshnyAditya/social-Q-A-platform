@@ -14,6 +14,14 @@ const userschema = mongoose.Schema({
   lastPasswordReset: { type: Date, default: null },
   otp: { type: String, default: null },
   otpExpiry: { type: Date, default: null },
+  // NEW: Task 6 — multi-language support
+  preferredLanguage: {
+    type: String,
+    enum: ["en", "es", "hi", "pt", "zh", "fr"],
+    default: "en",
+  },
+  // holds the language a user is mid-way through switching to, until OTP is verified
+  pendingLanguage: { type: String, default: null },
   // NEW: Task 5 — login history for transparency/security
   loginHistory: {
     type: [

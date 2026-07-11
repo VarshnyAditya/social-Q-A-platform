@@ -13,6 +13,8 @@ import pointsroutes from "./routes/points.js";
 import articleroutes from "./routes/article.js";
 import airoutes from "./routes/aiAssist.js";
 import savedroutes from "./routes/saved.js";
+import languageroutes from "./routes/language.js";
+import translateroutes from "./routes/translate.js";
 
 const app = express();
 app.use(express.json({ limit: "30mb", extended: true }));
@@ -32,6 +34,8 @@ app.use("/points", pointsroutes);
 app.use("/article", articleroutes);
 app.use("/ai", airoutes);
 app.use("/saved", savedroutes);
+app.use("/language", languageroutes);
+app.use("/translate", translateroutes);
 
 const PORT = process.env.PORT || 5000;
 const databaseurl = process.env.MONGODB_URL;
