@@ -124,11 +124,6 @@ A full-stack community platform inspired by Stack Overflow with additional socia
 - Secure Language Switching with User Authentication
 - Backend Validation for OTP Verification and Language Updates
 
----
-
-## 📌 Upcoming Features
-
-- Responsiveness
 
 ---
 
