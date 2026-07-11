@@ -36,7 +36,7 @@ const PRODUCT_ITEMS = [
   {
     label: "AI Assist",
     description: "Chat with an AI assistant for programming help.",
-    href: "/ai",
+    href: "/ai-assist",
     icon: Bot,
   },
   {
