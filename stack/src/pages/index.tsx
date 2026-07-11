@@ -7,6 +7,7 @@ import axiosInstance from "@/lib/axiosinstance";
 import { Flame, MessageSquare, Sparkles, ThumbsUp, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import SaveButton from "@/components/SaveButton";
 
 const getAnswerNetVotes = (q: any) =>
   (q.answer || []).reduce(
@@ -20,7 +21,17 @@ const getEngagementScore = (q: any) => {
   return qNet + aNet + (q.answer?.length || 0) * 2;
 };
 
-const QuestionRow = ({ question, badge }: { question: any; badge?: string }) => (
+const QuestionRow = ({
+  question,
+  badge,
+  isSaved,
+  onSaveToggled,
+}: {
+  question: any;
+  badge?: string;
+  isSaved?: boolean;
+  onSaveToggled?: (saved: boolean) => void;
+}) => (
   <div className="border-b border-gray-200 py-3 last:border-b-0">
     <div className="flex items-start gap-3">
       <div className="flex flex-col items-center text-xs text-gray-600 w-12 shrink-0">
@@ -31,25 +42,36 @@ const QuestionRow = ({ question, badge }: { question: any; badge?: string }) => 
         </div>
         <div>votes</div>
         <div
-          className={`mt-1 font-medium ${question.answer?.length > 0 ? "text-green-600" : ""
-            }`}
+          className={`mt-1 font-medium ${
+            question.answer?.length > 0 ? "text-green-600" : ""
+          }`}
         >
           {question.answer?.length || 0}
         </div>
         <div>ans</div>
       </div>
       <div className="min-w-0 flex-1">
-        {badge && (
-          <Badge variant="secondary" className="mb-1 text-xs bg-orange-100 text-orange-700">
-            {badge}
-          </Badge>
-        )}
-        <Link
-          href={`/questions/${question._id}`}
-          className="block text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          {question.questiontitle}
-        </Link>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            {badge && (
+              <Badge variant="secondary" className="mb-1 text-xs bg-orange-100 text-orange-700">
+                {badge}
+              </Badge>
+            )}
+            <Link
+              href={`/questions/${question._id}`}
+              className="block text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              {question.questiontitle}
+            </Link>
+          </div>
+          <SaveButton
+            questionId={question._id}
+            initialSaved={!!isSaved}
+            onToggled={onSaveToggled}
+            className="flex-shrink-0 -mt-1"
+          />
+        </div>
         <div className="flex flex-wrap gap-1 mt-1.5">
           {(question.questiontags || []).slice(0, 4).map((tag: string) => (
             <Link key={tag} href={`/questions?tag=${encodeURIComponent(tag)}`}>
@@ -74,6 +96,7 @@ export default function HomePage() {
   const [userCount, setUserCount] = useState(0);
   const [myPoints, setMyPoints] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -108,6 +131,28 @@ export default function HomePage() {
     fetchMyPoints();
   }, [user?._id]);
 
+  useEffect(() => {
+    if (!user) {
+      setSavedIds([]);
+      return;
+    }
+    const fetchSavedIds = async () => {
+      try {
+        const res = await axiosInstance.get("/saved/ids");
+        setSavedIds(res.data.data || []);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchSavedIds();
+  }, [user]);
+
+  const handleSaveToggled = (questionId: string, saved: boolean) => {
+    setSavedIds((prev) =>
+      saved ? [...prev, questionId] : prev.filter((id) => id !== questionId)
+    );
+  };
+
   if (loading) {
     return (
       <Mainlayout>
@@ -125,7 +170,7 @@ export default function HomePage() {
         q,
         tagMatches: userTags.length
           ? (q.questiontags || []).filter((t: string) => userTags.includes(t.toLowerCase()))
-            .length
+              .length
           : 0,
         engagement: getEngagementScore(q),
       }))
@@ -185,33 +230,24 @@ export default function HomePage() {
         </div>
 
         {/* Community stats */}
-        <section>
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="w-5 h-5 text-blue-500" />
-            <h2 className="text-lg font-semibold text-gray-800">Community at a Glance</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="border border-gray-200 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold text-gray-800">{questions.length}</div>
+            <div className="text-xs text-gray-500">Questions</div>
           </div>
-          <p className="text-xs text-gray-500 mb-2">
-            Totals across all of CodeQuest — not just your activity.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="border border-gray-200 rounded-lg p-4 text-center">
-              <div className="text-xl font-bold text-gray-800">{questions.length}</div>
-              <div className="text-xs text-gray-500">Total Questions</div>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-4 text-center">
-              <div className="text-xl font-bold text-gray-800">{totalAnswers}</div>
-              <div className="text-xs text-gray-500">Total Answers</div>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-4 text-center">
-              <div className="text-xl font-bold text-gray-800">{userCount}</div>
-              <div className="text-xs text-gray-500">Total Members</div>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-4 text-center">
-              <div className="text-xl font-bold text-gray-800">{posts.length}</div>
-              <div className="text-xs text-gray-500">Community Posts</div>
-            </div>
+          <div className="border border-gray-200 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold text-gray-800">{totalAnswers}</div>
+            <div className="text-xs text-gray-500">Answers</div>
           </div>
-        </section>
+          <div className="border border-gray-200 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold text-gray-800">{userCount}</div>
+            <div className="text-xs text-gray-500">Members</div>
+          </div>
+          <div className="border border-gray-200 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold text-gray-800">{posts.length}</div>
+            <div className="text-xs text-gray-500">Community Posts</div>
+          </div>
+        </div>
 
         {/* Interesting posts for you */}
         <section>
@@ -228,7 +264,14 @@ export default function HomePage() {
             {interestingPosts.length === 0 ? (
               <p className="text-sm text-gray-500 py-6 text-center">No questions yet.</p>
             ) : (
-              interestingPosts.map((q) => <QuestionRow key={q._id} question={q} />)
+              interestingPosts.map((q) => (
+                <QuestionRow
+                  key={q._id}
+                  question={q}
+                  isSaved={savedIds.includes(q._id)}
+                  onSaveToggled={(saved) => handleSaveToggled(q._id, saved)}
+                />
+              ))
             )}
           </div>
         </section>
@@ -243,7 +286,15 @@ export default function HomePage() {
             {trendingPosts.length === 0 ? (
               <p className="text-sm text-gray-500 py-6 text-center">Nothing trending yet.</p>
             ) : (
-              trendingPosts.map((q) => <QuestionRow key={q._id} question={q} badge="🔥 Hot" />)
+              trendingPosts.map((q) => (
+                <QuestionRow
+                  key={q._id}
+                  question={q}
+                  badge="🔥 Hot"
+                  isSaved={savedIds.includes(q._id)}
+                  onSaveToggled={(saved) => handleSaveToggled(q._id, saved)}
+                />
+              ))
             )}
           </div>
         </section>

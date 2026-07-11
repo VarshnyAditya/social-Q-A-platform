@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/router";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import SaveButton from "./SaveButton";
 
 const QuestionDetail = ({ questionId }: any) => {
   const router = useRouter();
@@ -27,6 +28,7 @@ const QuestionDetail = ({ questionId }: any) => {
   const [isSubmitting, setisSubmitting] = useState(false);
   const [loading, setloading] = useState(true);
   const [filter, setFilter] = useState<"newest" | "active" | "unanswered">("newest");
+  const [isSaved, setIsSaved] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -43,6 +45,22 @@ const QuestionDetail = ({ questionId }: any) => {
     };
     fetchquestion();
   }, [questionId]);
+
+  useEffect(() => {
+    if (!user) {
+      setIsSaved(false);
+      return;
+    }
+    const fetchSavedStatus = async () => {
+      try {
+        const res = await axiosInstance.get("/saved/ids");
+        setIsSaved((res.data.data || []).includes(questionId));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchSavedStatus();
+  }, [questionId, user]);
 
   if (loading) {
     return (
@@ -114,9 +132,6 @@ const QuestionDetail = ({ questionId }: any) => {
     }
   };
 
-  const handlebookmark = () => {
-    setquestion((prev: any) => ({ ...prev, isBookmarked: !prev.isBookmarked }));
-  };
 
   const handleSubmitanswer = async () => {
     if (!user) {
@@ -245,13 +260,11 @@ const QuestionDetail = ({ questionId }: any) => {
                 <ChevronDown className="w-6 h-6" />
               </Button>
               <div className="flex sm:flex-col gap-2 sm:gap-4 mt-4 sm:mt-6">
-                <Button
-                  variant="ghost" size="sm"
-                  className={`p-2 ${question?.isBookmarked ? "text-yellow-500" : "text-gray-600 hover:text-yellow-500"}`}
-                  onClick={handlebookmark}
-                >
-                  <Bookmark className="w-5 h-5" fill={question?.isBookmarked ? "currentColor" : "none"} />
-                </Button>
+                <SaveButton
+                  questionId={question._id}
+                  initialSaved={isSaved}
+                  onToggled={setIsSaved}
+                />
                 <Button variant="ghost" size="sm" className="p-2 text-gray-600 hover:text-gray-800">
                   <History className="w-5 h-5" />
                 </Button>

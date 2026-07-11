@@ -2,6 +2,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
+import { useAuth } from "@/lib/AuthContext";
+import SaveButton from "@/components/SaveButton";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -10,7 +12,9 @@ export default function QuestionsPage() {
   const [question, setquestion] = useState<any>(null);
   const [loading, setloading] = useState(true);
   const [activeTab, setActiveTab] = useState<"newest" | "active" | "unanswered">("newest");
+  const [savedIds, setSavedIds] = useState<string[]>([]);
   const router = useRouter();
+  const { user } = useAuth();
   const activeTag = typeof router.query.tag === "string" ? router.query.tag : null;
   useEffect(() => {
     const fetchquestion = async () => {
@@ -25,6 +29,22 @@ export default function QuestionsPage() {
     };
     fetchquestion();
   }, []);
+  useEffect(() => {
+    if (!user) {
+      setSavedIds([]);
+      return;
+    }
+    const fetchSavedIds = async () => {
+      try {
+        const res = await axiosInstance.get("/saved/ids");
+        setSavedIds(res.data.data || []);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchSavedIds();
+  }, [user]);
+
   if (loading) {
     return (
       <Mainlayout>
@@ -173,6 +193,18 @@ export default function QuestionsPage() {
                     >
                       {question.questiontitle}
                     </Link>
+                      <SaveButton
+                        questionId={question._id}
+                        initialSaved={savedIds.includes(question._id)}
+                        onToggled={(saved) =>
+                          setSavedIds((prev) =>
+                            saved
+                              ? [...prev, question._id]
+                              : prev.filter((id) => id !== question._id)
+                          )
+                        }
+                        className="flex-shrink-0"
+                      />
                     <p className="text-gray-700 text-sm mb-3 line-clamp-2">
                       {question.questionbody}
                     </p>

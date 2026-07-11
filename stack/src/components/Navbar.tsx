@@ -60,7 +60,7 @@ const PRODUCT_ITEMS = [
   {
     label: "Saves",
     description: "Access your bookmarked questions.",
-    href: "#",
+    href: "/saved",
     icon: Bookmark,
   },
 ];

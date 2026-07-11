@@ -6,6 +6,8 @@ import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/AuthContext";
+import SaveButton from "@/components/SaveButton";
 
 const COMPANIES: Record<string, any> = {
   google: {
@@ -246,6 +248,24 @@ export default function CompanyDetailPage() {
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [savedIds, setSavedIds]   = useState<string[]>([]);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) {
+      setSavedIds([]);
+      return;
+    }
+    const fetchSavedIds = async () => {
+      try {
+        const res = await axiosInstance.get("/saved/ids");
+        setSavedIds(res.data.data || []);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchSavedIds();
+  }, [user]);
 
   useEffect(() => {
     if (!company) return;
@@ -393,12 +413,24 @@ export default function CompanyDetailPage() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/questions/${q._id}`}
-                      className="text-blue-600 hover:text-blue-800 text-base font-medium mb-2 block"
-                    >
-                      {q.questiontitle}
-                    </Link>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <Link
+                        href={`/questions/${q._id}`}
+                        className="text-blue-600 hover:text-blue-800 text-base font-medium block"
+                      >
+                        {q.questiontitle}
+                      </Link>
+                      <SaveButton
+                        questionId={q._id}
+                        initialSaved={savedIds.includes(q._id)}
+                        onToggled={(saved) =>
+                          setSavedIds((prev) =>
+                            saved ? [...prev, q._id] : prev.filter((id) => id !== q._id)
+                          )
+                        }
+                        className="flex-shrink-0"
+                      />
+                    </div>
                     <p className="text-gray-700 text-sm mb-3 line-clamp-2">{q.questionbody}</p>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {q.questiontags.map((t: string) => (
