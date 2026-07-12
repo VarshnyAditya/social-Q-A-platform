@@ -27,9 +27,10 @@ const index = () => {
   const [loading, setloading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: users?.name || "",
-    about: users?.about || "",
-    tags: users?.tags || [],
+    name: "",
+    about: "",
+    tags: [] as string[],
+    phone: "",
   });
   const [newTag, setNewTag] = useState("");
 
@@ -60,6 +61,21 @@ const index = () => {
     };
     fetchuser();
   }, [id]);
+
+  // Whenever the edit dialog opens, snapshot the *current* profile data into
+  // the form. editForm previously only ever got its initial values at mount
+  // (when `users` was still null), so it always started blank/stale — this
+  // fixes that and also seeds the newly-added phone field.
+  useEffect(() => {
+    if (isEditing && users) {
+      setEditForm({
+        name: users.name || "",
+        about: users.about || "",
+        tags: users.tags || [],
+        phone: users.phone || "",
+      });
+    }
+  }, [isEditing, users]);
 
   // Reward points are public — anyone viewing this profile sees this user's total,
   // same as the Reward Tab, since both now read from the same Points collection.
@@ -126,6 +142,10 @@ const index = () => {
   }
 
   const handleSaveProfile = async () => {
+    if (editForm.phone && !/^\d{10}$/.test(editForm.phone)) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
     try {
       const res = await axiosInstance.patch(`/user/update/${user?._id}`, {
         editForm,
@@ -136,12 +156,13 @@ const index = () => {
           name: editForm.name,
           about: editForm.about,
           tags: editForm.tags,
+          phone: editForm.phone,
         };
 
         setusers(updatedUser);
         // Keep the navbar avatar, welcome text, etc in sync immediately —
         // otherwise they'd stay stale until the next login.
-        updateUser({ name: editForm.name, about: editForm.about, tags: editForm.tags });
+        updateUser({ name: editForm.name, about: editForm.about, tags: editForm.tags, phone: editForm.phone });
         setIsEditing(false);
         toast.success("Profile updated successfully!");
       }
@@ -251,6 +272,24 @@ const index = () => {
                               }
                               placeholder="Your display name"
                             />
+                          </div>
+                          <div>
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input
+                              id="phone"
+                              type="tel"
+                              value={editForm.phone}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  phone: e.target.value,
+                                })
+                              }
+                              placeholder="10-digit phone number"
+                            />
+                            <p className="text-xs text-gray-400 mt-1">
+                              Required to verify most language switches by SMS OTP.
+                            </p>
                           </div>
                         </div>
                       </div>

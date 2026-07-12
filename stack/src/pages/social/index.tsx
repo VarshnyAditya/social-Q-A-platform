@@ -1,5 +1,6 @@
 import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { Heart, MessageCircle, Share2, UserPlus, Check, Send, ImageVideo, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -34,6 +35,7 @@ interface FriendData {
 
 export default function SocialPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
   const [friendData, setFriendData] = useState<FriendData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -229,8 +231,8 @@ export default function SocialPage() {
   return (
     <Mainlayout>
       <div className="max-w-2xl mx-auto py-4 px-2">
-        <h1 className="text-2xl font-bold mb-1">Community Feed</h1>
-        <p className="text-sm text-gray-500 mb-4">Connect, share, and interact with the community</p>
+        <h1 className="text-2xl font-bold mb-1">{t("pages.communityFeed")}</h1>
+        <p className="text-sm text-gray-500 mb-4">{t("pages.communityFeedSubtitle")}</p>
 
         {/* Friend Requests */}
         {user && friendData && friendData.requests.length > 0 && (

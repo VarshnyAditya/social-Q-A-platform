@@ -3,6 +3,7 @@ import Head from "next/head";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { toast } from "react-toastify";
 
 type Transaction = {
@@ -29,6 +30,7 @@ const TYPE_STYLE: Record<string, { label: string; color: string; sign: string }>
 
 export default function PointsPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [totalPoints, setTotalPoints]       = useState<number>(0);
   const [transactions, setTransactions]     = useState<Transaction[]>([]);
   const [searchName, setSearchName]         = useState("");
@@ -116,14 +118,14 @@ export default function PointsPage() {
 
         {/* ---- Balance card ---- */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-400 rounded-xl p-6 text-white mb-6 shadow">
-          <p className="text-sm opacity-80 mb-1">Your Points Balance</p>
+          <p className="text-sm opacity-80 mb-1">{t("pages.pointsBalance")}</p>
           <p className="text-5xl font-bold">{totalPoints}</p>
           <p className="text-sm opacity-80 mt-1">points</p>
         </div>
 
         {/* ---- Transfer section ---- */}
         <div className="bg-white border rounded-xl p-5 mb-6 shadow-sm">
-          <h2 className="font-semibold text-gray-800 mb-4">Transfer Points</h2>
+          <h2 className="font-semibold text-gray-800 mb-4">{t("pages.transferPoints")}</h2>
 
           {totalPoints <= 10 && (
             <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
@@ -199,7 +201,7 @@ export default function PointsPage() {
 
         {/* ---- Transaction history ---- */}
         <div className="bg-white border rounded-xl p-5 shadow-sm">
-          <h2 className="font-semibold text-gray-800 mb-4">Transaction History</h2>
+          <h2 className="font-semibold text-gray-800 mb-4">{t("pages.transactionHistory")}</h2>
           {transactions.length === 0 ? (
             <p className="text-sm text-gray-400">
               No transactions yet. Start by answering a question!

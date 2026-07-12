@@ -4,6 +4,7 @@ import { useState } from "react";
 import Mainlayout from "@/layout/Mainlayout";
 import { Badge } from "@/components/ui/badge";
 import { challenges, type Difficulty } from "@/lib/challengesData";
+import { useLanguage } from "@/lib/LanguageContext";
 import { Trophy } from "lucide-react";
 
 const DIFFICULTY_STYLE: Record<Difficulty, string> = {
@@ -15,6 +16,7 @@ const DIFFICULTY_STYLE: Record<Difficulty, string> = {
 const FILTERS: Array<"All" | Difficulty> = ["All", "Easy", "Medium", "Hard"];
 
 export default function ChallengesPage() {
+  const { t } = useLanguage();
   const [activeFilter, setActiveFilter] = useState<"All" | Difficulty>("All");
 
   const displayedChallenges =
@@ -33,10 +35,10 @@ export default function ChallengesPage() {
           <div>
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-orange-500" />
-              <h1 className="text-xl lg:text-2xl font-semibold">Coding Challenges</h1>
+              <h1 className="text-xl lg:text-2xl font-semibold">{t("pages.codingChallenges")}</h1>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              Sharpen your skills with a curated set of practice problems.
+              {t("pages.challengesSubtitle")}
             </p>
           </div>
         </div>

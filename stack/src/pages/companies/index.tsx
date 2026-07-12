@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
+import { useLanguage } from "@/lib/LanguageContext";
 
 const COMPANIES = [
   {
@@ -198,6 +199,7 @@ const COMPANIES = [
 ];
 
 export default function CompaniesPage() {
+  const { t } = useLanguage();
   const [questionCounts, setQuestionCounts]   = useState<Record<string, number>>({});
   const [search, setSearch]                   = useState("");
   const [filter, setFilter]                   = useState("All");
@@ -244,9 +246,9 @@ export default function CompaniesPage() {
         <title>Companies — StackClone</title>
       </Head>
       <div className="p-4 lg:p-6">
-        <h1 className="text-xl lg:text-2xl font-semibold mb-2">Companies</h1>
+        <h1 className="text-xl lg:text-2xl font-semibold mb-2">{t("nav.companies")}</h1>
         <p className="text-sm text-gray-600 mb-6">
-          Explore top tech companies and find questions related to their technologies.
+          {t("pages.companiesSubtitle")}
         </p>
 
         {/* Search + Filter */}

@@ -5,6 +5,7 @@ import { Bookmark, X } from "lucide-react";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
@@ -23,6 +24,7 @@ type SavedQuestion = {
 
 export default function SavedPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [saved, setSaved] = useState<SavedQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export default function SavedPage() {
       <div className="p-4 lg:p-6 max-w-4xl">
         <div className="flex items-center gap-2 mb-6">
           <Bookmark className="w-5 h-5 text-yellow-500" fill="currentColor" />
-          <h1 className="text-xl lg:text-2xl font-semibold">Saved Questions</h1>
+          <h1 className="text-xl lg:text-2xl font-semibold">{t("pages.savedQuestions")}</h1>
         </div>
 
         {saved.length === 0 ? (

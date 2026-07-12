@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import SaveButton from "@/components/SaveButton";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -15,6 +16,7 @@ export default function QuestionsPage() {
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const activeTag = typeof router.query.tag === "string" ? router.query.tag : null;
   useEffect(() => {
     const fetchquestion = async () => {
@@ -103,7 +105,7 @@ export default function QuestionsPage() {
       <main className="min-w-0 p-4 lg:p-6 ">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h1 className="text-xl lg:text-2xl font-semibold">
-            {activeTag ? `Questions tagged [${activeTag}]` : "Top Questions"}
+            {activeTag ? `${t("pages.taggedWith")} [${activeTag}]` : t("pages.topQuestions")}
           </h1>
           <button
             onClick={() => router.push("/ask")}

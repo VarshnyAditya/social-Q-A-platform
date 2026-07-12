@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { Flame, MessageSquare, Sparkles, ThumbsUp, Users } from "lucide-react";
 import Link from "next/link";
@@ -90,6 +91,7 @@ const QuestionRow = ({
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [questions, setQuestions] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [userCount, setUserCount] = useState(0);
@@ -198,30 +200,30 @@ export default function HomePage() {
           {user ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-xl lg:text-2xl font-bold">Welcome back, {user.name}</h1>
+                <h1 className="text-xl lg:text-2xl font-bold">{t("pages.welcomeBack")}, {user.name}</h1>
                 <p className="text-sm opacity-90 mt-1">
-                  {myPoints !== null ? `${myPoints} reward points` : "Loading your points..."}
+                  {myPoints !== null ? `${myPoints} ${t("pages.rewardPoints")}` : t("pages.loadingPoints")}
                   {" · "}
-                  Here's what's happening in the community today.
+                  {t("pages.welcomeBackSub")}
                 </p>
               </div>
               <Link href="/ask">
                 <Button className="bg-white text-orange-600 hover:bg-gray-100 whitespace-nowrap">
-                  Ask a Question
+                  {t("questions.askQuestion")}
                 </Button>
               </Link>
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-xl lg:text-2xl font-bold">Welcome to CodeQuest</h1>
+                <h1 className="text-xl lg:text-2xl font-bold">{t("pages.welcomeGuest")}</h1>
                 <p className="text-sm opacity-90 mt-1">
-                  Join the community to ask questions, share answers, and earn reputation.
+                  {t("pages.welcomeGuestSub")}
                 </p>
               </div>
               <Link href="/signup">
                 <Button className="bg-white text-orange-600 hover:bg-gray-100 whitespace-nowrap">
-                  Join the Community
+                  {t("pages.joinCommunityCta")}
                 </Button>
               </Link>
             </div>

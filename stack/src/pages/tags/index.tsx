@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
+import { useLanguage } from "@/lib/LanguageContext";
 
 // Built-in descriptions for common tags
 const TAG_DESCRIPTIONS: Record<string, string> = {
@@ -66,6 +67,7 @@ const getDescription = (tag: string) =>
   `Questions and answers related to ${tag}. Click to explore.`;
 
 export default function TagsPage() {
+  const { t } = useLanguage();
   const [allTags, setAllTags]     = useState<{ name: string; count: number }[]>([]);
   const [filtered, setFiltered]   = useState<{ name: string; count: number }[]>([]);
   const [search, setSearch]       = useState("");
@@ -126,9 +128,9 @@ export default function TagsPage() {
         <title>Tags — StackClone</title>
       </Head>
       <div className="p-4 lg:p-6">
-        <h1 className="text-xl lg:text-2xl font-semibold mb-2">Tags</h1>
+        <h1 className="text-xl lg:text-2xl font-semibold mb-2">{t("nav.tags")}</h1>
         <p className="text-sm text-gray-600 mb-6">
-          A tag is a keyword or label that categorizes your question with other similar questions.
+          {t("pages.tagsSubtitle")}
         </p>
 
         {/* Search */}

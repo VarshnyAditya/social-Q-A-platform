@@ -3,12 +3,14 @@ import { Input } from "@/components/ui/input";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { Calendar, Search, Users } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 const UsersPage = () => {
   const { user: currentUser } = useAuth();
+  const { t } = useLanguage();
   const [users, setusers] = useState<any[]>([]);
   const [loading, setloading] = useState(true);
   const [search, setSearch] = useState("");
@@ -63,7 +65,7 @@ const UsersPage = () => {
     <Mainlayout>
       <div className="max-w-6xl">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl lg:text-2xl font-semibold">Users</h1>
+          <h1 className="text-xl lg:text-2xl font-semibold">{t("nav.users")}</h1>
           {currentUser && myFriends.length > 0 && (
             <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
               <Users className="w-4 h-4 text-blue-500" />

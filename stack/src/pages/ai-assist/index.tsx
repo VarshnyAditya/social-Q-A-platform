@@ -2,6 +2,7 @@ import Head from "next/head";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
@@ -22,6 +23,7 @@ const QUICK_PROMPTS = [
 
 export default function AIAssistPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -112,9 +114,9 @@ export default function AIAssistPage() {
           <div className="flex items-center gap-2">
             <Bot className="w-5 h-5 text-orange-500" />
             <div>
-              <h1 className="text-xl lg:text-2xl font-semibold">AI Assist</h1>
+              <h1 className="text-xl lg:text-2xl font-semibold">{t("nav.aiAssist")}</h1>
               <p className="text-xs text-gray-500">
-                Ask general or basic programming questions.
+                {t("pages.aiAssistSubtitle")}
               </p>
             </div>
           </div>

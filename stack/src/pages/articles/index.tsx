@@ -5,11 +5,13 @@ import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Eye, MessageSquare, Plus } from "lucide-react";
 
 export default function ArticlesPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [articles, setArticles]  = useState<any[]>([]);
   const [filtered, setFiltered]  = useState<any[]>([]);
@@ -66,9 +68,9 @@ export default function ArticlesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-xl lg:text-2xl font-semibold">Articles</h1>
+            <h1 className="text-xl lg:text-2xl font-semibold">{t("nav.articles")}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              In-depth technical articles written by the community.
+              {t("pages.articlesSubtitle")}
             </p>
           </div>
           {user && (

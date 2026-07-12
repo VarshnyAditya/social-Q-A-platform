@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { Plus, X } from "lucide-react";
 import { useRouter } from "next/router";
@@ -15,6 +16,7 @@ import { toast } from "react-toastify";
 export default function AskPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     title: "",
     body: "",
@@ -160,7 +162,7 @@ export default function AskPage() {
     <Mainlayout>
       <div className="max-w-6xl mx-auto p-4 lg:p-6">
         <h1 className="text-xl lg:text-2xl font-semibold mb-6">
-          Ask a public question
+          {t("pages.askPublicQuestion")}
         </h1>
 
         <form onSubmit={handleSubmit}>

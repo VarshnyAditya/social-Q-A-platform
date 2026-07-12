@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
 import { toast } from "react-toastify";
@@ -11,6 +12,7 @@ import { toast } from "react-toastify";
 export default function CreateArticlePage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [title, setTitle]           = useState("");
   const [summary, setSummary]       = useState("");
@@ -72,7 +74,7 @@ export default function CreateArticlePage() {
         <title>Write Article — StackClone</title>
       </Head>
       <div className="p-4 lg:p-6 max-w-3xl">
-        <h1 className="text-xl lg:text-2xl font-semibold mb-6">Write an Article</h1>
+        <h1 className="text-xl lg:text-2xl font-semibold mb-6">{t("pages.writeArticle")}</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
 

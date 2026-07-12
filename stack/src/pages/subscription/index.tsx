@@ -4,6 +4,7 @@ import Script from "next/script";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { toast } from "react-toastify";
 
 const PLAN_ORDER = ["free", "bronze", "silver", "gold"];
@@ -17,6 +18,7 @@ const PLAN_COPY: Record<string, { color: string; tagline: string }> = {
 
 export default function SubscriptionPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [plans, setPlans] = useState<any>(null);
   const [myStatus, setMyStatus] = useState<any>(null);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -108,9 +110,9 @@ export default function SubscriptionPage() {
       </Head>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="p-4 lg:p-6">
-        <h1 className="text-xl lg:text-2xl font-semibold mb-2">Subscription Plans</h1>
+        <h1 className="text-xl lg:text-2xl font-semibold mb-2">{t("pages.subscriptionPlans")}</h1>
         <p className="text-sm text-gray-600 mb-2">
-          Upgrade your plan to post more questions per day.
+          {t("pages.subscriptionSubtitle")}
         </p>
         <p className="text-xs text-orange-700 bg-orange-50 border border-orange-200 inline-block px-3 py-1.5 rounded mb-6">
           ⏰ Payments are accepted only between <strong>10:00 AM – 11:00 AM IST</strong>
