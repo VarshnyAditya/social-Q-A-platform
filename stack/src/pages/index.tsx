@@ -234,27 +234,27 @@ export default function HomePage() {
         <section>
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-5 h-5 text-blue-500" />
-            <h2 className="text-lg font-semibold text-gray-800">Community at a Glance</h2>
+            <h2 className="text-lg font-semibold text-gray-800">{t("pages.CommGlance")}</h2>
           </div>
           <p className="text-xs text-gray-500 mb-2">
-            Totals across all of CodeQuest — not just your activity.
+            {t("pages.belowCommunity")}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="border border-gray-200 rounded-lg p-4 text-center">
               <div className="text-xl font-bold text-gray-800">{questions.length}</div>
-              <div className="text-xs text-gray-500">Total Questions</div>
+              <div className="text-xs text-gray-500">{t("pages.TotalQues")}</div>
             </div>
             <div className="border border-gray-200 rounded-lg p-4 text-center">
               <div className="text-xl font-bold text-gray-800">{totalAnswers}</div>
-              <div className="text-xs text-gray-500">Total Answers</div>
+              <div className="text-xs text-gray-500">{t("pages.TotalAns")}</div>
             </div>
             <div className="border border-gray-200 rounded-lg p-4 text-center">
               <div className="text-xl font-bold text-gray-800">{userCount}</div>
-              <div className="text-xs text-gray-500">Total Members</div>
+              <div className="text-xs text-gray-500">{t("pages.TotalMem")}</div>
             </div>
             <div className="border border-gray-200 rounded-lg p-4 text-center">
               <div className="text-xl font-bold text-gray-800">{posts.length}</div>
-              <div className="text-xs text-gray-500">Community Posts</div>
+              <div className="text-xs text-gray-500">{t("pages.CommPost")}</div>
             </div>
           </div>
         </section>
@@ -263,16 +263,16 @@ export default function HomePage() {
         <section>
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-orange-500" />
-            <h2 className="text-lg font-semibold text-gray-800">Interesting posts for you</h2>
+            <h2 className="text-lg font-semibold text-gray-800">{t("pages.InterestedPost")}</h2>
           </div>
           <p className="text-xs text-gray-500 mb-2">
             {user?.tags?.length
               ? `Matched to your tags: ${user.tags.slice(0, 5).join(", ")}`
-              : "Add tags to your profile to personalize this list — showing top community activity for now."}
+              : t("pages.belowInterestedPost")}
           </p>
           <div className="border border-gray-200 rounded-lg px-4">
             {interestingPosts.length === 0 ? (
-              <p className="text-sm text-gray-500 py-6 text-center">No questions yet.</p>
+              <p className="text-sm text-gray-500 py-6 text-center">{t("pages.NoQues")}.</p>
             ) : (
               interestingPosts.map((q) => (
                 <QuestionRow
@@ -290,11 +290,11 @@ export default function HomePage() {
         <section>
           <div className="flex items-center gap-2 mb-2">
             <Flame className="w-5 h-5 text-red-500" />
-            <h2 className="text-lg font-semibold text-gray-800">Trending this week</h2>
+            <h2 className="text-lg font-semibold text-gray-800">{t("pages.trends")}</h2>
           </div>
           <div className="border border-gray-200 rounded-lg px-4">
             {trendingPosts.length === 0 ? (
-              <p className="text-sm text-gray-500 py-6 text-center">Nothing trending yet.</p>
+              <p className="text-sm text-gray-500 py-6 text-center">{t("pages.NoTrend")}</p>
             ) : (
               trendingPosts.map((q) => (
                 <QuestionRow
@@ -314,15 +314,15 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-blue-500" />
-              <h2 className="text-lg font-semibold text-gray-800">From the community</h2>
+              <h2 className="text-lg font-semibold text-gray-800">{t("pages.frCommunity")}</h2>
             </div>
             <Link href="/social" className="text-sm text-blue-600 hover:underline">
-              View all activity →
+              {t("pages.viewAct")} →
             </Link>
           </div>
           {recentPosts.length === 0 ? (
             <p className="text-sm text-gray-500 py-6 text-center border border-gray-200 rounded-lg">
-              No community posts yet.
+              {t("pages.NoPost")}
             </p>
           ) : (
             <div className="grid sm:grid-cols-3 gap-3">
