@@ -67,7 +67,7 @@ const index = () => {
               </div>
             </div>
             <span className="text-lg lg:text-xl font-bold text-gray-800">
-              stack<span className="font-normal">overflow</span>
+              Code<span className="font-normal">Quest</span>
             </span>
           </Link>
         </div>
@@ -121,7 +121,7 @@ const index = () => {
                 Log in to your account
               </CardTitle>
               <CardDescription>
-                Enter your email and password to access Stack Overflow
+                Enter your email and password to access CodeQuest
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

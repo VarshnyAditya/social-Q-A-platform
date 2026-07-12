@@ -117,7 +117,7 @@ const Navbar = ({ onToggleLeft, onToggleRight }: any) => {
               href="/"
               className="text-sm text-[#454545] font-medium px-4 py-2 rounded hover:bg-gray-200 transition"
             >
-              About
+              {t("nav.about")}
             </Link>
 
             {/* ---- Products: click-to-open dropdown ---- */}
@@ -130,7 +130,7 @@ const Navbar = ({ onToggleLeft, onToggleRight }: any) => {
                   productsOpen && "bg-gray-200"
                 )}
               >
-                Products
+                {t("nav.products")}
                 <ChevronDown
                   className={cn(
                     "w-3.5 h-3.5 transition-transform duration-200",
@@ -177,7 +177,7 @@ const Navbar = ({ onToggleLeft, onToggleRight }: any) => {
                 type="button"
                 className="text-sm text-[#454545] font-medium px-4 py-2 rounded hover:bg-gray-200 transition"
               >
-                For Teams
+                {t("nav.forteams")}
               </button>
 
               {/* Transparent bridge (pt-2) keeps hover alive between button and card */}

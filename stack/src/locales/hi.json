@@ -17,7 +17,10 @@
     "signup": "साइन अप करें",
     "logout": "लॉग आउट",
     "profile": "प्रोफ़ाइल",
-    "language": "भाषा"
+    "language": "भाषा",
+    "about": "बारे में",
+    "products": "उत्पादों",
+    "forteams": "टीमों के लिए"
   },
   "common": {
     "search": "खोजें",

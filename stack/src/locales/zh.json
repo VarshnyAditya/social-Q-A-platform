@@ -17,7 +17,10 @@
     "signup": "注册",
     "logout": "退出登录",
     "profile": "个人资料",
-    "language": "语言"
+    "language": "语言",
+    "about": "关于",
+    "products": "产品",
+    "forteams": "对于团队"
   },
   "common": {
     "search": "搜索",
