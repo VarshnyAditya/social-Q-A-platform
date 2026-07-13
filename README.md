@@ -137,6 +137,11 @@ A full-stack community platform inspired by Stack Overflow with additional socia
 
 ---
 
+## CodeQuest Overview
+![codeQuest Overview](stack/src/images/codequest_overview.png)
+
+---
+
 ## 📖 Project Status
 
 🟢 Task 1 Completed

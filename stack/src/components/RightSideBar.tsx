@@ -76,13 +76,15 @@ const RightSideBar = ({ isopen, isMobile }: any) => {
           <h3 className="font-semibold text-gray-800 mb-3 text-sm lg:text-base">
             {t("sidebar.customFilters")}
           </h3>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-blue-600 border-blue-600 hover:bg-blue-50 bg-transparent text-xs lg:text-sm"
-          >
-            {t("sidebar.createFilterBtn")}
-          </Button>
+          <Link href="/questions">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-blue-600 border-blue-600 hover:bg-blue-50 bg-transparent text-xs lg:text-sm"
+            >
+              {t("sidebar.createFilterBtn")}
+            </Button>
+          </Link>
         </div>
 
         <div>
