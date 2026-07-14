@@ -2,7 +2,7 @@ import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { Heart, MessageCircle, Share2, UserPlus, Check, Send, ImageVideo, X, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, UserPlus, Check, Send, X, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
