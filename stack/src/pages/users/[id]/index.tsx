@@ -389,23 +389,6 @@ const index = () => {
                 {new Date(users.joinDate).toISOString().split("T")[0]}
               </div>
             </div>
-            <div className="flex flex-wrap items-center space-x-6 text-sm">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                <span className="font-semibold">5</span>
-                <span className="text-gray-600 ml-1">gold badges</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
-                <span className="font-semibold">23</span>
-                <span className="text-gray-600 ml-1">silver badges</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-amber-600 rounded-full mr-2"></div>
-                <span className="font-semibold">45</span>
-                <span className="text-gray-600 ml-1">bronze badges</span>
-              </div>
-            </div>
           </div>
         </div>
         <div className="grid grid-cols-1  gap-6">

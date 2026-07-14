@@ -2,7 +2,7 @@ import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { Heart, MessageCircle, Share2, UserPlus, Check, Send, ImageVideo, X } from "lucide-react";
+import { Heart, MessageCircle, Share2, UserPlus, Check, Send, ImageVideo, X, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -187,6 +187,17 @@ export default function SocialPage() {
     }
   };
 
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("Delete this post? This can't be undone.")) return;
+    try {
+      await axiosInstance.delete(`/social/post/${postId}`);
+      setPosts(posts.filter((p) => p._id !== postId));
+      toast.success("Post deleted");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to delete post");
+    }
+  };
+
   const handleSendRequest = async (targetid: string) => {
     if (!user) { toast.error("Please login"); return; }
     try {
@@ -361,19 +372,30 @@ export default function SocialPage() {
                         <p className="text-xs text-gray-400">{new Date(post.postedon).toLocaleString()}</p>
                       </div>
                     </div>
-                    {user && !isOwn && !alreadyFriend && (
-                      <button
-                        onClick={() => handleSendRequest(post.userid)}
-                        className="flex items-center gap-1 text-xs text-blue-600 border border-blue-300 px-2 py-1 rounded hover:bg-blue-50"
-                      >
-                        <UserPlus className="w-3 h-3" /> Add Friend
-                      </button>
-                    )}
-                    {alreadyFriend && (
-                      <span className="text-xs text-green-600 flex items-center gap-1">
-                        <Check className="w-3 h-3" /> Friends
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {user && !isOwn && !alreadyFriend && (
+                        <button
+                          onClick={() => handleSendRequest(post.userid)}
+                          className="flex items-center gap-1 text-xs text-blue-600 border border-blue-300 px-2 py-1 rounded hover:bg-blue-50"
+                        >
+                          <UserPlus className="w-3 h-3" /> Add Friend
+                        </button>
+                      )}
+                      {alreadyFriend && (
+                        <span className="text-xs text-green-600 flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Friends
+                        </span>
+                      )}
+                      {isOwn && (
+                        <button
+                          onClick={() => handleDeletePost(post._id)}
+                          aria-label="Delete post"
+                          className="flex items-center gap-1 text-xs text-red-500 border border-red-200 px-2 py-1 rounded hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3 h-3" /> Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Text */}

@@ -78,6 +78,25 @@ export const createPost = async (req, res) => {
   }
 };
 
+// DELETE /social/post/:id — owner-only
+export const deletePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const post = await socialpost.findById(id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    if (post.userid !== req.userid) {
+      return res.status(403).json({ message: "You can only delete your own posts." });
+    }
+
+    await socialpost.findByIdAndDelete(id);
+    res.status(200).json({ message: "Post deleted" });
+  } catch (error) {
+    console.log("DELETE POST ERROR:", error.message);
+    res.status(500).json({ message: error.message || "Something went wrong" });
+  }
+};
+
 export const likePost = async (req, res) => {
   const { id } = req.params;
   const userid = req.userid;
