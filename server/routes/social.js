@@ -9,6 +9,7 @@ import {
   sendFriendRequest,
   acceptFriendRequest,
   getMyFriendData,
+  getFriendStatus,
 } from "../controller/social.js";
 import auth from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
@@ -24,5 +25,6 @@ router.patch("/share/:id", auth, sharePost);
 router.post("/friend/send", auth, sendFriendRequest);
 router.post("/friend/accept", auth, acceptFriendRequest);
 router.get("/friend/mydata", auth, getMyFriendData);
+router.get("/friend/status/:targetid", auth, getFriendStatus);
 
 export default router;

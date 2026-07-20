@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { Calendar, Coins, Edit, Monitor, Plus, Smartphone, X } from "lucide-react";
+import { Calendar, Coins, Edit, Monitor, Plus, Smartphone, UserCheck, UserPlus, X } from "lucide-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -46,6 +46,12 @@ const index = () => {
   // ---- Task 5: login history state (owner-only) ----
   const [loginHistory, setLoginHistory] = useState<any[]>([]);
   const [loginHistoryLoading, setLoginHistoryLoading] = useState(false);
+
+  // ---- Friend status (viewing someone else's profile) ----
+  const [friendStatus, setFriendStatus] = useState<
+    "self" | "friends" | "sent" | "received" | "none" | null
+  >(null);
+  const [friendActionLoading, setFriendActionLoading] = useState(false);
 
   useEffect(() => {
     const fetchuser = async () => {
@@ -114,6 +120,19 @@ const index = () => {
     }, 300);
     return () => clearTimeout(timeout);
   }, [searchTerm]);
+
+  useEffect(() => {
+    const fetchFriendStatus = async () => {
+      if (!id || !user?._id || id === user._id) return;
+      try {
+        const res = await axiosInstance.get(`/social/friend/status/${id}`);
+        setFriendStatus(res.data.status);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchFriendStatus();
+  }, [id, user?._id]);
 
   useEffect(() => {
     const fetchLoginHistory = async () => {
@@ -195,6 +214,39 @@ const index = () => {
       toast.error(error.response?.data?.message || "Transfer failed");
     } finally {
       setTransferLoading(false);
+    }
+  };
+
+  const handleAddFriend = async () => {
+    if (!user) {
+      toast.info("Please login to add friends");
+      router.push("/auth");
+      return;
+    }
+    if (!id || friendActionLoading) return;
+    setFriendActionLoading(true);
+    try {
+      await axiosInstance.post("/social/friend/send", { targetid: id });
+      setFriendStatus("sent");
+      toast.success("Friend request sent");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to send friend request");
+    } finally {
+      setFriendActionLoading(false);
+    }
+  };
+
+  const handleAcceptFriend = async () => {
+    if (!id || friendActionLoading) return;
+    setFriendActionLoading(true);
+    try {
+      await axiosInstance.post("/social/friend/accept", { requesterid: id });
+      setFriendStatus("friends");
+      toast.success("Friend request accepted");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to accept friend request");
+    } finally {
+      setFriendActionLoading(false);
     }
   };
 
@@ -380,6 +432,53 @@ const index = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+              )}
+
+              {!isOwnProfile && friendStatus && friendStatus !== "self" && (
+                <>
+                  {friendStatus === "none" && (
+                    <Button
+                      variant="outline"
+                      onClick={handleAddFriend}
+                      disabled={friendActionLoading}
+                      className="flex items-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      {friendActionLoading ? "Sending..." : "Add Friend"}
+                    </Button>
+                  )}
+
+                  {friendStatus === "sent" && (
+                    <Button
+                      disabled
+                      className="flex items-center gap-2 bg-blue-600 text-white opacity-100 hover:bg-blue-600 disabled:opacity-100"
+                    >
+                      <UserCheck className="w-4 h-4" />
+                      Request Sent
+                    </Button>
+                  )}
+
+                  {friendStatus === "received" && (
+                    <Button
+                      onClick={handleAcceptFriend}
+                      disabled={friendActionLoading}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <UserCheck className="w-4 h-4" />
+                      {friendActionLoading ? "Accepting..." : "Accept Friend Request"}
+                    </Button>
+                  )}
+
+                  {friendStatus === "friends" && (
+                    <Button
+                      disabled
+                      className="flex items-center gap-2 bg-blue-600 text-white opacity-100 hover:bg-blue-600 disabled:opacity-100"
+                    >
+                      <UserCheck className="w-4 h-4" />
+                      Friends
+                    </Button>
+                  )}
+                </>
               )}
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">

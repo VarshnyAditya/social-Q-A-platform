@@ -196,6 +196,35 @@ export const acceptFriendRequest = async (req, res) => {
   }
 };
 
+// GET /social/friend/status/:targetid — relationship of the logged-in user to another user
+// Returns one of: "self" | "friends" | "sent" | "received" | "none"
+export const getFriendStatus = async (req, res) => {
+  const userid = req.userid;
+  const { targetid } = req.params;
+  try {
+    if (String(userid) === String(targetid)) {
+      return res.status(200).json({ status: "self" });
+    }
+    const currentUser = await user
+      .findById(userid)
+      .select("friends friendRequestsSent friendRequestsReceived");
+    if (!currentUser) return res.status(404).json({ message: "User not found" });
+
+    let status = "none";
+    if (currentUser.friends.includes(String(targetid))) {
+      status = "friends";
+    } else if (currentUser.friendRequestsSent.includes(String(targetid))) {
+      status = "sent";
+    } else if (currentUser.friendRequestsReceived.includes(String(targetid))) {
+      status = "received";
+    }
+
+    res.status(200).json({ status });
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 export const getMyFriendData = async (req, res) => {
   const userid = req.userid;
   try {
