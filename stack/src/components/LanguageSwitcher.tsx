@@ -20,6 +20,7 @@ const LanguageSwitcher = () => {
   const [open, setOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const promptedForRef = useRef<string | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -30,6 +31,28 @@ const LanguageSwitcher = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // French still sends and verifies a real OTP over email — it just doesn't
+  // use the shared confirmation popup below. A native prompt collects the
+  // code instead, so there's no custom modal UI for this language.
+  useEffect(() => {
+    if (pendingLanguage === "fr" && promptedForRef.current !== pendingLanguage) {
+      promptedForRef.current = pendingLanguage;
+      const entered = window.prompt(
+        `${otpChannel === "email" ? t("language.otpSentEmail") : t("language.otpSentMobile")}${
+          maskedDestination ? ` (${maskedDestination})` : ""
+        }\n\n${t("language.enterOtp")}`
+      );
+      if (entered && entered.trim()) {
+        verifyLanguageChange(entered.trim());
+      } else {
+        cancelLanguageChange();
+      }
+    }
+    if (pendingLanguage !== "fr") {
+      promptedForRef.current = null;
+    }
+  }, [pendingLanguage, otpChannel, maskedDestination]);
 
   const handleSelect = async (lang: string) => {
     setOpen(false);
@@ -78,8 +101,9 @@ const LanguageSwitcher = () => {
         )}
       </div>
 
-      {/* OTP verification modal — shown once a language switch has been requested */}
-      {pendingLanguage && (
+      {/* OTP verification modal — shown once a language switch has been requested.
+          French is excluded: it's verified via a native prompt above instead. */}
+      {pendingLanguage && pendingLanguage !== "fr" && (
         <div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center px-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative">
             <button
