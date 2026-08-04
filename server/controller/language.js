@@ -1,6 +1,5 @@
 import user from "../models/auth.js";
 import { sendOTPEmail } from "../utils/mailer.js";
-import { sendOTPSms, maskPhone, maskEmail } from "../utils/sms.js";
 
 const SUPPORTED_LANGUAGES = ["en", "es", "hi", "pt", "zh", "fr"];
 
@@ -8,13 +7,19 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Anything other than French verifies via mobile; French verifies via email.
-const requiresEmailVerification = (lang) => lang === "fr";
+// Masks an email for display, e.g. "john.doe@gmail.com" -> "j***@gmail.com"
+// (inlined here since utils/sms.js, which used to own this helper, was removed)
+const maskEmail = (email = "") => {
+  const [local, domain] = email.split("@");
+  if (!domain) return "***";
+  const maskedLocal = local.length <= 1 ? "*" : `${local[0]}***`;
+  return `${maskedLocal}@${domain}`;
+};
 
-// STEP 1: user picks a language -> send OTP to the right channel
-// (French always verifies via email; the frontend just doesn't use the
-// shared popup UI to collect it — see switchLanguageDirect note below, no
-// longer used, kept removed intentionally.)
+// Every language now verifies via email, same as French previously did.
+const requiresEmailVerification = (lang) => true;
+
+// STEP 1: user picks a language -> send OTP via email
 export const requestLanguageChangeOTP = async (req, res) => {
   const userId = req.userid;
   const { targetLanguage } = req.body;
@@ -31,15 +36,11 @@ export const requestLanguageChangeOTP = async (req, res) => {
       return res.status(400).json({ message: "This is already your active language." });
     }
 
-    // French always verifies via email. Everything else prefers mobile, but
-    // no real SMS gateway is wired up (see utils/sms.js — placeholder only)
-    // and most accounts don't have a phone on file, so fall back to email
-    // whenever there's no phone number rather than hard-blocking the flow.
-    const hasPhone = Boolean(existingUser.phone);
-    const useEmail = requiresEmailVerification(targetLanguage) || !hasPhone;
+    // All languages verify via email now.
+    const useEmail = requiresEmailVerification(targetLanguage);
 
     if (useEmail && !existingUser.email) {
-      return res.status(400).json({ message: "No registered email or phone found for verification." });
+      return res.status(400).json({ message: "No registered email found for verification." });
     }
 
     const otp = generateOTP();
@@ -51,29 +52,17 @@ export const requestLanguageChangeOTP = async (req, res) => {
       pendingLanguage: targetLanguage,
     });
 
-    if (useEmail) {
-      await sendOTPEmail(
-        existingUser.email,
-        otp,
-        existingUser.name,
-        "You requested to switch your CodeQuest website language. Use the OTP below to confirm this change:"
-      );
-    } else {
-      await sendOTPSms(existingUser.phone, otp, existingUser.name);
-    }
-
-    const isDevMode = process.env.NODE_ENV !== "production";
-    // Reveal the OTP alongside the message in dev mode so it's easy to test
-    // without needing access to the real email/SMS channel.
-    const shouldRevealDevOtp = isDevMode;
+    await sendOTPEmail(
+      existingUser.email,
+      otp,
+      existingUser.name,
+      "You requested to switch your CodeQuest website language. Use the OTP below to confirm this change:"
+    );
 
     return res.status(200).json({
-      message: useEmail
-        ? "OTP sent to your registered email. Enter it to switch language."
-        : "OTP sent to your registered phone number. Enter it to switch language.",
-      verificationChannel: useEmail ? "email" : "mobile",
-      maskedDestination: useEmail ? maskEmail(existingUser.email) : maskPhone(existingUser.phone),
-      ...(shouldRevealDevOtp ? { devOtp: otp } : {}),
+      message: "OTP sent to your registered email. Enter it to switch language.",
+      verificationChannel: "email",
+      maskedDestination: maskEmail(existingUser.email),
     });
   } catch (error) {
     console.error("requestLanguageChangeOTP error:", error.message);

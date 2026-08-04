@@ -42,14 +42,14 @@ const parseLoginEnv = (req) => {
   };
 };
 
-// Mobile logins are only allowed 10:00 AM – 1:00 PM IST
+// Mobile logins are only allowed 12:00 AM – 12:00 PM IST
 const isWithinMobileLoginWindow = () => {
   const now = new Date();
   const istString = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
   const istNow = new Date(istString);
   const totalMinutes = istNow.getHours() * 60 + istNow.getMinutes();
-  const windowStart = 10 * 60; // 10:00 AM
-  const windowEnd = 13 * 60; // 1:00 PM
+  const windowStart = 0 * 60; // 12:00 AM (midnight)
+  const windowEnd = 12 * 60; // 12:00 PM (noon)
   return totalMinutes >= windowStart && totalMinutes < windowEnd;
 };
 
@@ -109,11 +109,11 @@ export const Login = async (req, res) => {
 
     const env = parseLoginEnv(req);
 
-    // ---- Mobile devices: time-restricted access (10 AM – 1 PM IST only) ----
+    // ---- Mobile devices: time-restricted access (12 AM – 12 PM IST only) ----
     if (env.deviceType === "mobile" && !isWithinMobileLoginWindow()) {
       return res.status(403).json({
         message:
-          "Login from mobile devices is only allowed between 10:00 AM and 1:00 PM IST. Please try again during that window.",
+          "Login from mobile devices is only allowed between 12:00 AM and 12:00 PM IST. Please try again during that window.",
       });
     }
 
@@ -399,4 +399,3 @@ export const forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
-

@@ -65,7 +65,7 @@ export const LanguageProvider = ({ children }) => {
   );
 
   // STEP 1: user picks a target language -> ask backend to send OTP
-  // (email for French, mobile for everything else)
+  // (all languages now verify via email)
   const requestLanguageChange = async (targetLanguage) => {
     if (targetLanguage === language) {
       toast.info(t("language.alreadyActive"));
@@ -74,18 +74,12 @@ export const LanguageProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axiosInstance.post("/language/request-otp", { targetLanguage });
-      const { message, verificationChannel, maskedDestination: masked, devOtp } = res.data;
+      const { message, verificationChannel, maskedDestination: masked } = res.data;
 
       setPendingLanguage(targetLanguage);
       setOtpChannel(verificationChannel);
       setMaskedDestination(masked);
-
       toast.info(`${message} (${masked})`);
-
-      if (devOtp) {
-        // Dev-mode-only reveal, stays on screen longer so there's time to copy it.
-        toast.warn(`${t("language.devOtpNotice")} ${devOtp}`, { autoClose: 15000 });
-      }
 
       return { started: true, verificationChannel, maskedDestination: masked };
     } catch (error) {

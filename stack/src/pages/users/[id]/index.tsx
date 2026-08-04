@@ -340,7 +340,7 @@ const index = () => {
                               placeholder="10-digit phone number"
                             />
                             <p className="text-xs text-gray-400 mt-1">
-                              Required to verify most language switches by SMS OTP.
+                              Optional — language switches are now verified by email OTP.
                             </p>
                           </div>
                         </div>
