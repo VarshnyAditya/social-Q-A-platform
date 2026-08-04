@@ -67,29 +67,29 @@ Posting Rules
 
 ### 🌍 Multi-language Support
 
-- Supported Languages:
+Supported Languages:
 
-English
-Hindi
-Spanish
-Portuguese
-Chinese
-French
+- English
+- Hindi
+- Spanish
+- Portuguese
+- Chinese
+- French
 
-- Additional Security:
+Additional Security:
 
-Email OTP required for all Languages
+- Email OTP required for all Languages
 
 ### 📱 Smart Login Rules
 
-- Desktop
+Desktop
 
-Google Chrome → Email OTP Required
-Microsoft Edge → Direct Login
+- Google Chrome → Email OTP Required
+- Microsoft Edge → Direct Login
 
-- Mobile
+Mobile
 
-Login Allowed Only Between 12:00 AM – 12:00 PM (IST)
+- Login Allowed Only Between 12:00 AM – 12:00 PM (IST)
 
 ### 📊 User Dashboard
 - View Profile
