@@ -104,7 +104,7 @@ const LanguageSwitcher = () => {
       {/* OTP verification modal — shown once a language switch has been requested.
           French is excluded: it's verified via a native prompt above instead. */}
       {pendingLanguage && pendingLanguage !== "fr" && (
-        <div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-100 bg-black/40 flex items-center justify-center px-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative">
             <button
               onClick={handleCancel}
