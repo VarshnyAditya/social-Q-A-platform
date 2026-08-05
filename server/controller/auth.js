@@ -191,7 +191,8 @@ export const getLoginHistory = async (req, res) => {
   try {
     const existingUser = await user.findById(id).select("loginHistory");
     if (!existingUser) return res.status(404).json({ message: "User not found" });
-    res.status(200).json({ data: existingUser.loginHistory || [] });
+    const recentHistory = (existingUser.loginHistory || []).slice(0, 5);
+    res.status(200).json({ data: recentHistory });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
   }

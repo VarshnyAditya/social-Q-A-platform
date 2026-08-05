@@ -588,7 +588,7 @@ const index = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Monitor className="w-5 h-5 text-gray-500" />
-                    Login History
+                    Recent Login History (last 5)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
