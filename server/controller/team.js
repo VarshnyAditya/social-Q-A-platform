@@ -1,6 +1,9 @@
 import team from "../models/team.js";
 import teamMessage from "../models/teamMessage.js";
 import user from "../models/auth.js";
+import points from "../models/points.js";
+
+const MIN_POINTS_TO_CREATE_TEAM = 15;
 
 export const createTeam = async (req, res) => {
   const userid = req.userid;
@@ -13,6 +16,16 @@ export const createTeam = async (req, res) => {
 
     const creator = await user.findById(userid).select("name");
     if (!creator) return res.status(404).json({ message: "User not found" });
+
+    // Team creation requires a minimum reward-point balance, same Points
+    // collection used across points/profile/social — no doc yet just means 0.
+    const pointsDoc = await points.findOne({ userid: String(userid) });
+    const totalPoints = pointsDoc?.totalPoints ?? 0;
+    if (totalPoints < MIN_POINTS_TO_CREATE_TEAM) {
+      return res.status(403).json({
+        message: `You need at least ${MIN_POINTS_TO_CREATE_TEAM} points to create a team. You currently have ${totalPoints}.`,
+      });
+    }
 
     const existing = await team.findOne({ name: name.trim() });
     if (existing) {

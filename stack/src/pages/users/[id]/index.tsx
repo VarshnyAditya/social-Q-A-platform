@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { Calendar, Coins, Edit, Monitor, Plus, Smartphone, UserCheck, UserPlus, X } from "lucide-react";
+import { Calendar, Coins, Edit, MessageCircle, Monitor, Plus, Smartphone, UserCheck, UserPlus, X } from "lucide-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -470,13 +470,23 @@ const index = () => {
                   )}
 
                   {friendStatus === "friends" && (
-                    <Button
-                      disabled
-                      className="flex items-center gap-2 bg-blue-600 text-white opacity-100 hover:bg-blue-600 disabled:opacity-100"
-                    >
-                      <UserCheck className="w-4 h-4" />
-                      Friends
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        disabled
+                        className="flex items-center gap-2 bg-blue-600 text-white opacity-100 hover:bg-blue-600 disabled:opacity-100"
+                      >
+                        <UserCheck className="w-4 h-4" />
+                        Friends
+                      </Button>
+                      <Button
+                        onClick={() => router.push(`/chat?with=${id}`)}
+                        variant="outline"
+                        className="flex items-center gap-2 text-orange-600 border-orange-300 hover:bg-orange-50 bg-transparent"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Chat
+                      </Button>
+                    </div>
                   )}
                 </>
               )}

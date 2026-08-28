@@ -2,7 +2,9 @@ import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { ArrowLeft, Film, Image as ImageIcon, Paperclip, Send, X } from "lucide-react";
+import { ArrowLeft, Film, Image as ImageIcon, Paperclip, Send, User, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -33,6 +35,7 @@ interface Message {
 export default function ChatPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const router = useRouter();
   const [list, setList] = useState<ConversationEntry[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [activeFriend, setActiveFriend] = useState<ConversationEntry | null>(null);
@@ -45,6 +48,7 @@ export default function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const activeFriendIdRef = useRef<string | null>(null);
+  const autoOpenedRef = useRef(false);
 
   const fetchList = async () => {
     try {
@@ -100,6 +104,19 @@ export default function ChatPage() {
       prev.map((c) => (c.friendId === entry.friendId ? { ...c, unreadCount: 0 } : c))
     );
   };
+
+  // Lets other pages (e.g. a friend's profile "Chat" button) deep-link
+  // straight into a conversation via /chat?with=<friendId>.
+  useEffect(() => {
+    if (autoOpenedRef.current || loadingList) return;
+    const withId = router.query.with;
+    if (typeof withId !== "string") return;
+    const entry = list.find((c) => c.friendId === withId);
+    if (entry) {
+      autoOpenedRef.current = true;
+      openConversation(entry);
+    }
+  }, [router.query.with, list, loadingList]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -229,7 +246,15 @@ export default function ChatPage() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <p className="font-medium text-gray-900">{activeFriend.name}</p>
+                <p className="font-medium text-gray-900 flex-1 min-w-0 truncate">
+                  {activeFriend.name}
+                </p>
+                <Link
+                  href={`/users/${activeFriend.friendId}`}
+                  className="flex-shrink-0 flex items-center gap-1 text-xs font-medium text-orange-600 border border-orange-300 hover:bg-orange-50 px-3 py-1.5 rounded-full transition"
+                >
+                  <User className="w-3.5 h-3.5" /> Profile
+                </Link>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">

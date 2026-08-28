@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+
+const MIN_POINTS_TO_CREATE_TEAM = 15;
 
 export default function CreateTeamPage() {
   const { user } = useAuth();
@@ -14,6 +16,22 @@ export default function CreateTeamPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [points, setPoints] = useState<number | null>(null);
+  const [pointsLoading, setPointsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setPointsLoading(false);
+      return;
+    }
+    axiosInstance
+      .get("/points/mystats")
+      .then((res) => setPoints(res.data.totalPoints ?? 0))
+      .catch(() => setPoints(0))
+      .finally(() => setPointsLoading(false));
+  }, [user]);
+
+  const eligible = (points ?? 0) >= MIN_POINTS_TO_CREATE_TEAM;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +64,19 @@ export default function CreateTeamPage() {
           Start a space other CodeQuest members can discover and join.
         </p>
 
+        {/* Points gate — creating a team requires 15+ reward points */}
+        {user && !pointsLoading && !eligible && (
+          <div className="mb-6 border border-amber-200 bg-amber-50 rounded-lg p-4">
+            <p className="text-sm text-amber-800 font-medium">
+              You need at least {MIN_POINTS_TO_CREATE_TEAM} points to create a team.
+            </p>
+            <p className="text-xs text-amber-700 mt-1">
+              You currently have {points ?? 0} {points === 1 ? "point" : "points"}. Answer
+              questions to earn more.
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Team name</label>
@@ -54,6 +85,7 @@ export default function CreateTeamPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. React Performance Enthusiasts"
               maxLength={80}
+              disabled={!eligible}
             />
           </div>
           <div>
@@ -66,9 +98,14 @@ export default function CreateTeamPage() {
               placeholder="What's this team about?"
               rows={4}
               maxLength={500}
+              disabled={!eligible}
             />
           </div>
-          <Button type="submit" disabled={submitting} className="bg-orange-500 hover:bg-orange-600">
+          <Button
+            type="submit"
+            disabled={submitting || pointsLoading || !eligible}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
             {submitting ? "Creating..." : "Create Team"}
           </Button>
         </form>
