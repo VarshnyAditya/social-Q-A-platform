@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
 import { Bot, Loader2, RotateCcw, Send, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatMessage {
   id: string;
@@ -20,6 +22,74 @@ const QUICK_PROMPTS = [
   "What's the difference between let and var?",
   "How do I reverse a string in Python?",
 ];
+
+// Renders the AI's markdown (**bold**, `code`, lists, headings, tables, etc.)
+// as actual formatted HTML instead of showing the raw symbols. Sized and
+// spaced to sit naturally inside a narrow chat bubble.
+const markdownComponents = {
+  p: ({ children }: any) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+  strong: ({ children }: any) => <strong className="font-semibold">{children}</strong>,
+  em: ({ children }: any) => <em className="italic">{children}</em>,
+  a: ({ href, children }: any) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 underline hover:text-blue-700"
+    >
+      {children}
+    </a>
+  ),
+  ul: ({ children }: any) => (
+    <ul className="list-disc pl-5 mb-2 space-y-1 last:mb-0">{children}</ul>
+  ),
+  ol: ({ children }: any) => (
+    <ol className="list-decimal pl-5 mb-2 space-y-1 last:mb-0">{children}</ol>
+  ),
+  li: ({ children }: any) => <li className="leading-relaxed">{children}</li>,
+  h1: ({ children }: any) => (
+    <h1 className="text-base font-semibold mt-3 mb-1.5 first:mt-0">{children}</h1>
+  ),
+  h2: ({ children }: any) => (
+    <h2 className="text-[15px] font-semibold mt-3 mb-1.5 first:mt-0">{children}</h2>
+  ),
+  h3: ({ children }: any) => (
+    <h3 className="text-sm font-semibold mt-2.5 mb-1 first:mt-0">{children}</h3>
+  ),
+  blockquote: ({ children }: any) => (
+    <blockquote className="border-l-2 border-gray-300 pl-3 my-2 text-gray-600 italic">
+      {children}
+    </blockquote>
+  ),
+  hr: () => <hr className="my-3 border-gray-300" />,
+  table: ({ children }: any) => (
+    <div className="overflow-x-auto my-2">
+      <table className="min-w-full text-xs border-collapse">{children}</table>
+    </div>
+  ),
+  th: ({ children }: any) => (
+    <th className="border border-gray-300 px-2 py-1 bg-gray-50 text-left font-semibold">
+      {children}
+    </th>
+  ),
+  td: ({ children }: any) => <td className="border border-gray-300 px-2 py-1">{children}</td>,
+  // react-markdown v10 no longer passes an `inline` flag, so inline code is
+  // styled as a small pill by default; the `pre` wrapper below strips that
+  // styling back off for fenced code blocks so they get the dark block look.
+  code: ({ className, children, ...props }: any) => (
+    <code
+      className={`bg-gray-200/70 text-[0.85em] px-1 py-0.5 rounded font-mono ${className || ""}`}
+      {...props}
+    >
+      {children}
+    </code>
+  ),
+  pre: ({ children }: any) => (
+    <pre className="bg-gray-900 text-gray-100 text-xs rounded-lg p-3 overflow-x-auto my-2 [&_code]:bg-transparent [&_code]:p-0 [&_code]:rounded-none [&_code]:text-inherit">
+      {children}
+    </pre>
+  ),
+};
 
 export default function AIAssistPage() {
   const { user } = useAuth();
@@ -172,13 +242,19 @@ export default function AIAssistPage() {
                   }`}
                 >
                   <div
-                    className={`px-3.5 py-2 rounded-2xl text-sm whitespace-pre-wrap ${
+                    className={`px-3.5 py-2 rounded-2xl text-sm ${
                       m.role === "user"
-                        ? "bg-blue-600 text-white rounded-br-sm"
+                        ? "bg-blue-600 text-white rounded-br-sm whitespace-pre-wrap"
                         : "bg-gray-100 text-gray-800 rounded-bl-sm"
                     }`}
                   >
-                    {m.content}
+                    {m.role === "assistant" ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                        {m.content}
+                      </ReactMarkdown>
+                    ) : (
+                      m.content
+                    )}
                   </div>
                   <span className="text-[10px] text-gray-400 mt-1 px-1">
                     {formatTime(m.timestamp)}

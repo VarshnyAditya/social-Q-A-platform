@@ -7,12 +7,14 @@ import {
   CreditCard,
   FileText,
   Home,
+  MessageCircle,
   MessageSquare,
   MessageSquareIcon,
   Star,
   Tag,
   Trophy,
   Users,
+  Users2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -54,6 +56,13 @@ const Sidebar = ({ isopen, isMobile, onClose }: any) => {
       badge: { text: "NEW", className: "bg-orange-100 text-orange-800" },
     },
     { href: "/social", label: t("nav.social"), icon: MessageSquare },
+    { href: "/chat", label: t("nav.chat"), icon: MessageCircle },
+    {
+      href: "/teams",
+      label: t("nav.teams"),
+      icon: Users2,
+      badge: { text: "NEW", className: "bg-blue-100 text-blue-800" },
+    },
     { href: "/articles", label: t("nav.articles"), icon: FileText },
     { href: "/companies", label: t("nav.companies"), icon: Building },
   ];

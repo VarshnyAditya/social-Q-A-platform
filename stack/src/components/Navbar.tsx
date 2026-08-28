@@ -191,17 +191,18 @@ const Navbar = ({ onToggleLeft, onToggleRight }: any) => {
               >
                 <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
                   <p className="text-sm font-semibold text-gray-900 mb-1">
-                    CodeQuest for Teams
+                    Form Teams on CodeQuest
                   </p>
                   <p className="text-xs text-gray-500 mb-3">
-                    A private space where teams can ask questions, share knowledge, and
-                    collaborate securely.
+                    Start a team or community around what you're building, and let other
+                    members find it and join in.
                   </p>
                   <Link
-                    href="/"
+                    href="/teams/create"
+                    onClick={() => setTeamsOpen(false)}
                     className="inline-block bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded transition"
                   >
-                    Learn More
+                    Create Team
                   </Link>
                 </div>
               </div>

@@ -20,7 +20,9 @@
     "language": "Language",
     "about": "About",
     "products": "Products",
-    "forteams": "For Teams"
+    "forteams": "Form Teams",
+    "chat": "Chat",
+    "teams": "Teams"
   },
   "common": {
     "search": "Search",
@@ -137,7 +139,9 @@
     "aiAssistSubtitle": "Ask general or basic programming questions.",
     "pointsBalance": "Your Points Balance",
     "transferPoints": "Transfer Points",
-    "transactionHistory": "Transaction History"
+    "transactionHistory": "Transaction History",
+    "chatSubtitle": "Message your friends directly — text, images, and short videos.",
+    "teamsSubtitle": "Create a team, or join one started by someone else in the community."
   },
   "sidebar": {
     "overflowBlog": "The CodeQuest Blog",
