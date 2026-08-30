@@ -20,7 +20,9 @@
     "language": "语言",
     "about": "关于",
     "products": "产品",
-    "forteams": "对于团队"
+    "forteams": "对于团队",
+    "chat": "聊天",
+    "teams": "团队"
   },
   "common": {
     "search": "搜索",
@@ -89,14 +91,6 @@
     "privacyPolicy": "隐私政策",
     "and": "和",
     "termsOfService": "服务条款"
-  },
-  "languageNames": {
-    "en": "英语",
-    "es": "西班牙语",
-    "hi": "印地语",
-    "pt": "葡萄牙语",
-    "zh": "中文",
-    "fr": "法语"
   },
   "pages": {
     "welcomeBack": "欢迎回来",

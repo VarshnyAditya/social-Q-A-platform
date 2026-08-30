@@ -20,7 +20,9 @@
     "language": "Idioma",
     "about": "Acerca de",
     "products": "Productos",
-    "forteams": "Para equipos"
+    "forteams": "Para equipos",
+    "chat": "Charlar",
+    "teams": "equipos"
   },
   "common": {
     "search": "Buscar",
@@ -89,14 +91,6 @@
     "privacyPolicy": "política de privacidad",
     "and": "y",
     "termsOfService": "términos de servicio"
-  },
-  "languageNames": {
-    "en": "Inglés",
-    "es": "Español",
-    "hi": "Hindi",
-    "pt": "Portugués",
-    "zh": "Chino",
-    "fr": "Francés"
   },
   "pages": {
     "welcomeBack": "Bienvenido de nuevo",
