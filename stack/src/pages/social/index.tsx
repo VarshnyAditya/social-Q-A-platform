@@ -48,7 +48,26 @@ export default function SocialPage() {
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
   const [openComments, setOpenComments] = useState<{ [key: string]: boolean }>({});
   const [allUsers, setAllUsers] = useState<{ _id: string; name: string }[]>([]);
+  // Set of "targetType:targetId" keys this user has already reported, so
+  // flags on posts/comments render red immediately on page load.
+  const [reportedKeys, setReportedKeys] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchReportedStatus = async () => {
+    if (!user) {
+      setReportedKeys(new Set());
+      return;
+    }
+    try {
+      const res = await axiosInstance.get("/report/mine");
+      const keys = (res.data.data || []).map(
+        (r: any) => `${r.targetType}:${r.targetId}`
+      );
+      setReportedKeys(new Set(keys));
+    } catch {
+      console.log("Could not fetch reported status");
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -81,7 +100,7 @@ export default function SocialPage() {
   useEffect(() => {
     const load = async () => {
       if (user) {
-        await Promise.all([fetchPosts(), fetchFriendData(), fetchAllUsers()]);
+        await Promise.all([fetchPosts(), fetchFriendData(), fetchAllUsers(), fetchReportedStatus()]);
       } else {
         await fetchPosts();
       }
@@ -452,6 +471,7 @@ export default function SocialPage() {
                         targetId={post._id}
                         label="Report"
                         className="w-full h-auto rounded-none flex items-center justify-center gap-1 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-500"
+                        initialReported={reportedKeys.has(`post:${post._id}`)}
                       />
                     </div>
                   </div>
@@ -478,6 +498,7 @@ export default function SocialPage() {
                               parentId={post._id}
                               iconOnly
                               className="text-gray-300 hover:text-gray-600 p-1 h-auto flex-shrink-0"
+                              initialReported={reportedKeys.has(`comment:${c._id}`)}
                             />
                           </div>
                         ))}

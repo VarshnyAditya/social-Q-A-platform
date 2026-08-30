@@ -45,6 +45,9 @@ export default function TeamDetailPage() {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState("");
   const [sending, setSending] = useState(false);
+  // Set of "targetType:targetId" keys this user has already reported, so
+  // flags on team messages render red immediately on page load.
+  const [reportedKeys, setReportedKeys] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -76,6 +79,25 @@ export default function TeamDetailPage() {
     fetchTeam();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    if (!user) {
+      setReportedKeys(new Set());
+      return;
+    }
+    const fetchReportedStatus = async () => {
+      try {
+        const res = await axiosInstance.get("/report/mine");
+        const keys = (res.data.data || []).map(
+          (r: any) => `${r.targetType}:${r.targetId}`
+        );
+        setReportedKeys(new Set(keys));
+      } catch {
+        console.log("Could not fetch reported status");
+      }
+    };
+    fetchReportedStatus();
+  }, [user]);
 
   useEffect(() => {
     if (!isMember) return;
@@ -258,6 +280,7 @@ export default function TeamDetailPage() {
                           parentId={team._id}
                           iconOnly
                           className="text-gray-300 hover:text-gray-600 p-1 h-auto flex-shrink-0 mb-1"
+                          initialReported={reportedKeys.has(`teammessage:${m._id}`)}
                         />
                       )}
                       <div

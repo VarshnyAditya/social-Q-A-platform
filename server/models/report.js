@@ -20,4 +20,11 @@ const reportSchema = mongoose.Schema({
 
 reportSchema.index({ status: 1, createdAt: -1 });
 
+// A user can never report the same piece of content twice — enforced at the
+// DB level in addition to the check the controller does before inserting.
+reportSchema.index(
+  { reportedBy: 1, targetType: 1, targetId: 1 },
+  { unique: true }
+);
+
 export default mongoose.model("report", reportSchema);

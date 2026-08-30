@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Flag } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -12,6 +12,7 @@ import { Textarea } from "./ui/textarea";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "react-toastify";
+import { cn } from "@/lib/utils";
 
 const REASONS = [
   "Spam",
@@ -32,6 +33,10 @@ interface ReportButtonProps {
   className?: string;
   label?: string;
   iconOnly?: boolean;
+  // Whether the current user has already reported this item — e.g. loaded
+  // in bulk from GET /report/mine when the page mounts. Lets the flag show
+  // as already-red instead of only turning red after a report this session.
+  initialReported?: boolean;
 }
 
 export default function ReportButton({
@@ -41,16 +46,28 @@ export default function ReportButton({
   className = "text-gray-600 hover:text-gray-800",
   label = "Flag",
   iconOnly = false,
+  initialReported = false,
 }: ReportButtonProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState(REASONS[0]);
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [reported, setReported] = useState(initialReported);
+
+  // The "mine" list is fetched asynchronously by the parent page, so it can
+  // arrive after this button has already mounted with reported=false.
+  useEffect(() => {
+    if (initialReported) setReported(true);
+  }, [initialReported]);
 
   const handleOpen = () => {
     if (!user) {
       toast.info("Log in to report content");
+      return;
+    }
+    if (reported) {
+      toast.info("You've already reported this — our team is reviewing it.");
       return;
     }
     setOpen(true);
@@ -69,8 +86,17 @@ export default function ReportButton({
       setOpen(false);
       setDetails("");
       setReason(REASONS[0]);
+      setReported(true);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Could not submit report");
+      // Someone else's request (or another tab) may have already recorded
+      // this report — treat that the same as success from the UI's POV.
+      if (error.response?.status === 409) {
+        toast.info("You've already reported this.");
+        setOpen(false);
+        setReported(true);
+      } else {
+        toast.error(error.response?.data?.message || "Could not submit report");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -78,9 +104,17 @@ export default function ReportButton({
 
   return (
     <>
-      <Button variant="ghost" size="sm" className={className} onClick={handleOpen}>
-        <Flag className={iconOnly ? "w-4 h-4" : "w-4 h-4 mr-1"} />
-        {!iconOnly && label}
+      <Button
+        variant="ghost"
+        size="sm"
+        className={cn(className, reported && "text-red-600 hover:text-red-600")}
+        onClick={handleOpen}
+      >
+        <Flag
+          className={iconOnly ? "w-4 h-4" : "w-4 h-4 mr-1"}
+          fill={reported ? "currentColor" : "none"}
+        />
+        {!iconOnly && (reported ? "Reported" : label)}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

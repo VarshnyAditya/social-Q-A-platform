@@ -32,6 +32,9 @@ const QuestionDetail = ({ questionId }: any) => {
   const [loading, setloading] = useState(true);
   const [filter, setFilter] = useState<"newest" | "active" | "unanswered">("newest");
   const [isSaved, setIsSaved] = useState(false);
+  // Set of "targetType:targetId" keys this user has already reported, so
+  // flags on the question/answers render red immediately on page load.
+  const [reportedKeys, setReportedKeys] = useState<Set<string>>(new Set());
   const { user } = useAuth();
 
   // Task 6 — on-demand translation of user-generated content (question/answer
@@ -116,6 +119,25 @@ const QuestionDetail = ({ questionId }: any) => {
       }
     };
     fetchSavedStatus();
+  }, [questionId, user]);
+
+  useEffect(() => {
+    if (!user) {
+      setReportedKeys(new Set());
+      return;
+    }
+    const fetchReportedStatus = async () => {
+      try {
+        const res = await axiosInstance.get("/report/mine");
+        const keys = (res.data.data || []).map(
+          (r: any) => `${r.targetType}:${r.targetId}`
+        );
+        setReportedKeys(new Set(keys));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchReportedStatus();
   }, [questionId, user]);
 
   // If the user switches languages while viewing this question, drop any
@@ -384,6 +406,7 @@ const QuestionDetail = ({ questionId }: any) => {
                     targetId={question._id}
                     className="text-gray-600 hover:text-gray-800"
                     label={t("common.flag")}
+                    initialReported={reportedKeys.has(`question:${question._id}`)}
                   />
                   {question.userid === user?._id && (
                     <Button variant="ghost" size="sm" onClick={handleDelete} className="text-red-600 hover:text-red-800">
@@ -506,6 +529,7 @@ const QuestionDetail = ({ questionId }: any) => {
                             parentId={question._id}
                             className="text-gray-600 hover:text-gray-800"
                             label={t("common.flag")}
+                            initialReported={reportedKeys.has(`answer:${ans._id}`)}
                           />
                           {ans.userid === user?._id && (
                             <Button
