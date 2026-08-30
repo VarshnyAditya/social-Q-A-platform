@@ -1,5 +1,6 @@
 import message from "../models/chat.js";
 import user from "../models/auth.js";
+import { createNotification } from "./notification.js";
 
 // Friendship is symmetric — both users' `friends` arrays are kept in sync
 // when a request is accepted (see social.js: acceptFriendRequest), so
@@ -38,6 +39,16 @@ export const sendMessage = async (req, res) => {
       text: text?.trim() || "",
       mediaUrl,
       mediaType,
+    });
+
+    const sender = await user.findById(fromid).select("name");
+    await createNotification({
+      userid: friendid,
+      type: "chat_message",
+      fromUserId: fromid,
+      fromUserName: sender?.name || "Someone",
+      message: `${sender?.name || "Someone"} sent you a message`,
+      link: `/chat?with=${fromid}`,
     });
 
     res.status(200).json({ data: newMessage });

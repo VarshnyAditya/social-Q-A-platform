@@ -1,5 +1,6 @@
 import socialpost from "../models/social.js";
 import user from "../models/auth.js";
+import { createNotification } from "./notification.js";
 
 const getPostLimit = (friendCount) => {
   if (friendCount === 0) return 0;
@@ -110,6 +111,20 @@ export const likePost = async (req, res) => {
       post.likes.push(String(userid));
     }
     await post.save();
+
+    // Only notify on a fresh like, not on unlike, and never for your own post.
+    if (!alreadyLiked) {
+      const liker = await user.findById(userid).select("name");
+      await createNotification({
+        userid: post.userid,
+        type: "post_like",
+        fromUserId: userid,
+        fromUserName: liker?.name || "Someone",
+        message: `${liker?.name || "Someone"} liked your post`,
+        link: "/social",
+      });
+    }
+
     res.status(200).json({ data: post });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
@@ -126,6 +141,16 @@ export const commentPost = async (req, res) => {
     if (!post) return res.status(404).json({ message: "Post not found" });
     post.comments.push({ userid: String(userid), username: currentUser.name, text });
     await post.save();
+
+    await createNotification({
+      userid: post.userid,
+      type: "post_comment",
+      fromUserId: userid,
+      fromUserName: currentUser?.name || "Someone",
+      message: `${currentUser?.name || "Someone"} commented on your post`,
+      link: "/social",
+    });
+
     res.status(200).json({ data: post });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
@@ -164,6 +189,16 @@ export const sendFriendRequest = async (req, res) => {
     target.friendRequestsReceived.push(String(senderid));
     await sender.save();
     await target.save();
+
+    await createNotification({
+      userid: targetid,
+      type: "friend_request",
+      fromUserId: senderid,
+      fromUserName: sender.name,
+      message: `${sender.name} sent you a friend request`,
+      link: `/users/${senderid}`,
+    });
+
     res.status(200).json({ message: "Friend request sent" });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
@@ -190,6 +225,16 @@ export const acceptFriendRequest = async (req, res) => {
     );
     await currentUser.save();
     await requester.save();
+
+    await createNotification({
+      userid: requesterid,
+      type: "friend_accept",
+      fromUserId: userid,
+      fromUserName: currentUser.name,
+      message: `${currentUser.name} accepted your friend request`,
+      link: `/users/${userid}`,
+    });
+
     res.status(200).json({ message: "Friend request accepted" });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });

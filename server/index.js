@@ -19,6 +19,7 @@ import chatroutes from "./routes/chat.js";
 import teamroutes from "./routes/team.js";
 import reportroutes from "./routes/report.js";
 import adminroutes from "./routes/admin.js";
+import notificationroutes from "./routes/notification.js";
 
 const app = express();
 app.use(express.json({ limit: "30mb", extended: true }));
@@ -44,6 +45,7 @@ app.use("/chat", chatroutes);
 app.use("/team", teamroutes);
 app.use("/report", reportroutes);
 app.use("/admin", adminroutes);
+app.use("/notification", notificationroutes);
 
 const PORT = process.env.PORT || 5000;
 const databaseurl = process.env.MONGODB_URL;

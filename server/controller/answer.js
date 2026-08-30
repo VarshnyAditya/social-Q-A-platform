@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import question from "../models/question.js";
 import user from "../models/auth.js";
 import { addPoints, deductPoints } from "./points.js";
+import { createNotification } from "./notification.js";
 
 export const Askanswer = async (req, res) => {
   const { id: _id } = req.params;
@@ -30,6 +31,15 @@ export const Askanswer = async (req, res) => {
     if (userid) {
       await addPoints(userid, 5, "Posted an answer");
     }
+
+    await createNotification({
+      userid: updatequestion.userid,
+      type: "answer",
+      fromUserId: userid,
+      fromUserName: useranswered || "Someone",
+      message: `${useranswered || "Someone"} answered your question "${updatequestion.questiontitle}"`,
+      link: `/questions/${updatequestion._id}`,
+    });
 
     res.status(200).json({ data: updatequestion });
   } catch (error) {

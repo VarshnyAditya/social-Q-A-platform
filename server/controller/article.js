@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import Article from "../models/article.js";
+import { createNotification } from "./notification.js";
 
 // Auto-calculate read time (avg 200 words/min)
 const calcReadTime = (content) => {
@@ -102,6 +103,16 @@ export const addComment = async (req, res) => {
     );
 
     if (!article) return res.status(404).json({ message: "Article not found" });
+
+    await createNotification({
+      userid: article.authorId,
+      type: "article_comment",
+      fromUserId: req.userid,
+      fromUserName: req.body.username || "Someone",
+      message: `${req.body.username || "Someone"} commented on your article "${article.title}"`,
+      link: `/articles/${article._id}`,
+    });
+
     res.status(200).json({ data: article });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong", error: error.message });

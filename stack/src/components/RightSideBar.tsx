@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { cn } from "@/lib/utils";
 import axiosInstance from "@/lib/axiosinstance";
+import NotificationBell from "@/components/NotificationBell";
 
 interface TrendingTag {
   name: string;
@@ -69,6 +70,9 @@ const RightSideBar = ({ isopen, isMobile }: any) => {
     >
       <div className="p-4 lg:p-6 w-72 lg:w-80 h-full overflow-y-auto">
         <div className="space-y-4 lg:space-y-6">
+          {/* Notifications — friend requests, article/post comments, chat messages, etc. */}
+          {user && <NotificationBell />}
+
           {/* Your CodeQuest — real points balance instead of a static blog box */}
           <div className="bg-white border border-gray-200 rounded-lg p-3 lg:p-4">
             <h3 className="font-semibold text-gray-800 mb-3 text-sm lg:text-base flex items-center gap-1.5">
