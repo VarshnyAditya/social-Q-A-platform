@@ -1,55 +1,63 @@
-// Email sending via Brevo's transactional email API (https://www.brevo.com)
-// instead of raw SMTP — most production hosts block outbound SMTP ports
-const MAILERSEND_API_URL = "https://api.mailersend.com/v1/email";
+// Email sending via SMTP2GO's transactional email API (https://www.smtp2go.com)
+// instead of raw SMTP — most production hosts (Render, Vercel) block or
+// throttle outbound SMTP ports, so this goes over plain HTTPS instead.
+const SMTP2GO_API_URL = "https://api.smtp2go.com/v3/email/send";
+
 export const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.MAILERSEND_API_KEY;
-  const fromEmail = process.env.MAILERSEND_SENDER_EMAIL;
-  const fromName = process.env.MAILERSEND_SENDER_NAME || "CodeQuest";
+  const apiKey = process.env.SMTP2GO_API_KEY;
+  const fromEmail = process.env.SMTP2GO_SENDER_EMAIL;
+  const fromName = process.env.SMTP2GO_SENDER_NAME || "CodeQuest";
 
   console.log("MAILER ENV:", {
     apiKey: !!apiKey,
     fromEmail,
-    fromName
+    fromName,
   });
 
   if (!apiKey) {
-    throw new Error("MAILERSEND_API_KEY missing");
+    throw new Error("SMTP2GO_API_KEY missing");
   }
 
   if (!fromEmail) {
-    throw new Error("MAILERSEND_SENDER_EMAIL missing");
+    throw new Error("SMTP2GO_SENDER_EMAIL missing");
   }
 
   const recipients = Array.isArray(to) ? to : [to];
 
-  const response = await fetch(MAILERSEND_API_URL, {
+  const response = await fetch(SMTP2GO_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      accept: "application/json",
+      "X-Smtp2go-Api-Key": apiKey,
     },
     body: JSON.stringify({
-      from: { email: fromEmail, name: fromName, },
-      to: recipients.map((email) => ({ email })),
+      sender: `${fromName} <${fromEmail}>`,
+      to: recipients,
       subject,
-      html: html,
+      html_body: html,
     }),
   });
 
   const data = await response.json().catch(() => ({}));
 
-  if (!response.ok) {
-    console.error("MailerSend API error:", data);
-    throw new Error(data.message || "Failed to send email via MailerSend");
+  // SMTP2GO returns 200 with data.data.failed > 0 for per-recipient failures
+  // (e.g. unverified sender, invalid address) rather than always using HTTP
+  // error codes — so check both.
+  const failed = data?.data?.failed ?? 0;
+  if (!response.ok || failed > 0) {
+    console.error("SMTP2GO API error:", data);
+    const reason = data?.data?.failures?.[0] || data?.data?.error || "Failed to send email via SMTP2GO";
+    throw new Error(reason);
   }
 
-  console.log("Email sent successfully via Brevo:", data.messageId);
+  console.log("Email sent successfully via SMTP2GO:", data?.data?.email_id);
   return data;
 };
 
 // Used by: Chrome-login OTP, forgot-password OTP, and any other OTP flow —
 // same call signature as before this migration, so none of the callers in
-// auth.js (or language.js, if that's where the French path lives) need to change.
+// auth.js or language.js need to change.
 export const sendOTPEmail = async (toEmail, otp, userName, purposeText) => {
   const introText =
     purposeText || "We received a request to reset your password. Use the OTP below to proceed:";
