@@ -107,6 +107,12 @@ export const Login = async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
+    if (exisitinguser.banned) {
+      return res.status(403).json({
+        message: "Your account has been suspended. Contact support if you believe this is a mistake.",
+      });
+    }
+
     const env = parseLoginEnv(req);
 
     // ---- Mobile devices: time-restricted access (12 AM – 12 PM IST only) ----
@@ -117,20 +123,8 @@ export const Login = async (req, res) => {
       });
     }
 
-    // ---- Chrome: require OTP verification before granting access ----
-    if (env.browser === "Chrome") {
-      const otp = generateOTP();
-      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-      await user.findByIdAndUpdate(exisitinguser._id, { otp, otpExpiry });
-      await sendOTPEmail(exisitinguser.email, otp, exisitinguser.name);
-      return res.status(200).json({
-        requiresOtp: true,
-        userId: exisitinguser._id,
-        message: "OTP sent to your registered email. Please verify to continue.",
-      });
-    }
-
-    // ---- All other browsers (e.g. Microsoft Edge/IE, Firefox, Safari): direct access ----
+    // ---- Direct access for all browsers — OTP is only required at signup
+    // and password reset, not on ordinary login. ----
     await recordLogin(exisitinguser._id, env);
     const token = jwt.sign(
       { email: exisitinguser.email, id: exisitinguser._id },
@@ -146,42 +140,6 @@ export const Login = async (req, res) => {
 };
 
 // ---- Task 5: verify OTP for a Chrome login, then issue the token ----
-export const verifyLoginOTP = async (req, res) => {
-  const { userId, otp } = req.body;
-  if (!userId || !otp) {
-    return res.status(400).json({ message: "User ID and OTP are required" });
-  }
-  try {
-    const existingUser = await user.findById(userId);
-    if (!existingUser) return res.status(404).json({ message: "User not found" });
-    if (!existingUser.otp || !existingUser.otpExpiry) {
-      return res.status(400).json({ message: "No OTP found. Please login again." });
-    }
-    if (new Date() > new Date(existingUser.otpExpiry)) {
-      return res.status(400).json({ message: "OTP has expired. Please login again." });
-    }
-    if (existingUser.otp !== otp.trim()) {
-      return res.status(400).json({ message: "Incorrect OTP. Please try again." });
-    }
-
-    await user.findByIdAndUpdate(userId, { otp: null, otpExpiry: null });
-
-    const env = parseLoginEnv(req);
-    await recordLogin(userId, env);
-
-    const token = jwt.sign(
-      { email: existingUser.email, id: existingUser._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-    const updatedUser = await user.findById(userId);
-    res.status(200).json({ data: updatedUser, token });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
-  }
-};
-
 // ---- Task 5: login history is only ever visible to its own owner ----
 export const getLoginHistory = async (req, res) => {
   const { id } = req.params;

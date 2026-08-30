@@ -46,39 +46,12 @@ export const AuthProvider = ({ children }) => {
         password,
       });
 
-      // Chrome logins come back requiring OTP verification instead of a token
-      if (res.data.requiresOtp) {
-        return { requiresOtp: true, userId: res.data.userId, message: res.data.message };
-      }
-
       const { data, token } = res.data;
       localStorage.setItem("user", JSON.stringify({...data,token}));
       setUser(data);
       toast.success("Login Successful");
-      return { requiresOtp: false };
     } catch (error) {
       const msg = error.response?.data?.message || "Login failed";
-      seterror(msg);
-      toast.error(msg);
-      throw error;
-    } finally {
-      setloading(false);
-    }
-  };
-  const verifyLoginOtp = async ({ userId, otp }) => {
-    setloading(true);
-    seterror(null);
-    try {
-      const res = await axiosInstance.post("/user/verify-login-otp", {
-        userId,
-        otp,
-      });
-      const { data, token } = res.data;
-      localStorage.setItem("user", JSON.stringify({ ...data, token }));
-      setUser(data);
-      toast.success("Login Successful");
-    } catch (error) {
-      const msg = error.response?.data?.message || "OTP verification failed";
       seterror(msg);
       toast.error(msg);
       throw error;
@@ -106,7 +79,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, Signup, Login, verifyLoginOtp, Logout, updateUser, loading, error }}
+      value={{ user, Signup, Login, Logout, updateUser, loading, error }}
     >
       {children}
     </AuthContext.Provider>

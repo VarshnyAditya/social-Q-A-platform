@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import question from "../models/question.js";
+import user from "../models/auth.js";
 import { addPoints, deductPoints } from "./points.js";
 
 export const Askanswer = async (req, res) => {
@@ -57,6 +58,15 @@ export const deleteanswer = async (req, res) => {
     const answerDoc = questionDoc.answer.find(
       (a) => a._id.toString() === answerid
     );
+    if (!answerDoc) {
+      return res.status(404).json({ message: "answer not found" });
+    }
+    if (String(answerDoc.userid) !== String(req.userid)) {
+      const requester = await user.findById(req.userid).select("role");
+      if (requester?.role !== "admin") {
+        return res.status(403).json({ message: "You can only delete your own answers" });
+      }
+    }
 
     questionDoc.answer.pull(answerid);
     // Always derive noofanswer from the real answers array

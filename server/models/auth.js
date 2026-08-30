@@ -8,6 +8,10 @@ const userschema = mongoose.Schema({
   about: { type: String },
   tags: { type: [String] },
   joinDate: { type: Date, default: Date.now },
+  // Role-based access for moderation — "admin" unlocks the admin panel.
+  role: { type: String, enum: ["user", "admin"], default: "user" },
+  // Suspended accounts can't log in — set/cleared from the admin panel.
+  banned: { type: Boolean, default: false },
   friends: { type: [String], default: [] },
   friendRequestsSent: { type: [String], default: [] },
   friendRequestsReceived: { type: [String], default: [] },

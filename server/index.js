@@ -17,6 +17,8 @@ import languageroutes from "./routes/language.js";
 import translateroutes from "./routes/translate.js";
 import chatroutes from "./routes/chat.js";
 import teamroutes from "./routes/team.js";
+import reportroutes from "./routes/report.js";
+import adminroutes from "./routes/admin.js";
 
 const app = express();
 app.use(express.json({ limit: "30mb", extended: true }));
@@ -40,6 +42,8 @@ app.use("/language", languageroutes);
 app.use("/translate", translateroutes);
 app.use("/chat", chatroutes);
 app.use("/team", teamroutes);
+app.use("/report", reportroutes);
+app.use("/admin", adminroutes);
 
 const PORT = process.env.PORT || 5000;
 const databaseurl = process.env.MONGODB_URL;

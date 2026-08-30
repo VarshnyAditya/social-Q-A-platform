@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import {
   Bookmark,
@@ -10,6 +11,7 @@ import {
   MessageCircle,
   MessageSquare,
   MessageSquareIcon,
+  ShieldAlert,
   Star,
   Tag,
   Trophy,
@@ -23,6 +25,7 @@ import { Badge } from "./ui/badge";
 
 const Sidebar = ({ isopen, isMobile, onClose }: any) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const router = useRouter();
 
   // "/" only matches the home page itself; every other entry also matches
@@ -65,6 +68,9 @@ const Sidebar = ({ isopen, isMobile, onClose }: any) => {
     },
     { href: "/articles", label: t("nav.articles"), icon: FileText },
     { href: "/companies", label: t("nav.companies"), icon: Building },
+    ...(user?.role === "admin"
+      ? [{ href: "/admin", label: "Admin", icon: ShieldAlert }]
+      : []),
   ];
 
   return (

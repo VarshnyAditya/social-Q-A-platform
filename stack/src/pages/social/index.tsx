@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { Heart, MessageCircle, Share2, UserPlus, Check, Send, X, Trash2 } from "lucide-react";
+import ReportButton from "@/components/ReportButton";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -445,6 +446,14 @@ export default function SocialPage() {
                       <Share2 className="w-4 h-4" />
                       Share
                     </button>
+                    <div className="flex-1">
+                      <ReportButton
+                        targetType="post"
+                        targetId={post._id}
+                        label="Report"
+                        className="w-full h-auto rounded-none flex items-center justify-center gap-1 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-500"
+                      />
+                    </div>
                   </div>
 
                   {/* Comments */}
@@ -455,7 +464,7 @@ export default function SocialPage() {
                           <p className="text-xs text-gray-400">No comments yet.</p>
                         )}
                         {post.comments.map((c) => (
-                          <div key={c._id} className="flex gap-2">
+                          <div key={c._id} className="flex gap-2 items-start">
                             <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                               {c.username?.charAt(0).toUpperCase()}
                             </div>
@@ -463,6 +472,13 @@ export default function SocialPage() {
                               <span className="font-semibold">{c.username}: </span>
                               {c.text}
                             </div>
+                            <ReportButton
+                              targetType="comment"
+                              targetId={c._id}
+                              parentId={post._id}
+                              iconOnly
+                              className="text-gray-300 hover:text-gray-600 p-1 h-auto flex-shrink-0"
+                            />
                           </div>
                         ))}
                       </div>

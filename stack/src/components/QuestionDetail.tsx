@@ -3,7 +3,6 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
-  Flag,
   History,
   Languages,
   Share,
@@ -12,6 +11,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
+import ReportButton from "./ReportButton";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -379,9 +379,12 @@ const QuestionDetail = ({ questionId }: any) => {
                   <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
                     <Share className="w-4 h-4 mr-1" /> {t("common.share")}
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                    <Flag className="w-4 h-4 mr-1" /> {t("common.flag")}
-                  </Button>
+                  <ReportButton
+                    targetType="question"
+                    targetId={question._id}
+                    className="text-gray-600 hover:text-gray-800"
+                    label={t("common.flag")}
+                  />
                   {question.userid === user?._id && (
                     <Button variant="ghost" size="sm" onClick={handleDelete} className="text-red-600 hover:text-red-800">
                       <Trash className="w-4 h-4 mr-1" /> {t("common.delete")}
@@ -497,9 +500,13 @@ const QuestionDetail = ({ questionId }: any) => {
                           <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
                             <Share className="w-4 h-4 mr-1" /> {t("common.share")}
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                            <Flag className="w-4 h-4 mr-1" /> {t("common.flag")}
-                          </Button>
+                          <ReportButton
+                            targetType="answer"
+                            targetId={ans._id}
+                            parentId={question._id}
+                            className="text-gray-600 hover:text-gray-800"
+                            label={t("common.flag")}
+                          />
                           {ans.userid === user?._id && (
                             <Button
                               variant="ghost" size="sm"

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import question from "../models/question.js";
+import user from "../models/auth.js";
 import { checkQuestionLimit } from "./subscriptionLimit.js";
 import { PLANS } from "./subscription.js";
 
@@ -47,6 +48,16 @@ export const deletequestion = async (req, res) => {
     return res.status(400).json({ message: "question unavailable" });
   }
   try {
+    const found = await question.findById(_id);
+    if (!found) {
+      return res.status(404).json({ message: "question unavailable" });
+    }
+    if (String(found.userid) !== String(req.userid)) {
+      const requester = await user.findById(req.userid).select("role");
+      if (requester?.role !== "admin") {
+        return res.status(403).json({ message: "You can only delete your own questions" });
+      }
+    }
     await question.findByIdAndDelete(_id);
     res.status(200).json({ message: "question deleted" });
   } catch (error) {

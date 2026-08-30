@@ -2,6 +2,7 @@ import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { ArrowLeft, Paperclip, Send, Users2, X } from "lucide-react";
+import ReportButton from "@/components/ReportButton";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
@@ -246,7 +247,19 @@ export default function TeamDetailPage() {
                 messages.map((m) => {
                   const mine = m.from === user?._id;
                   return (
-                    <div key={m._id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                    <div
+                      key={m._id}
+                      className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}
+                    >
+                      {!mine && (
+                        <ReportButton
+                          targetType="teammessage"
+                          targetId={m._id}
+                          parentId={team._id}
+                          iconOnly
+                          className="text-gray-300 hover:text-gray-600 p-1 h-auto flex-shrink-0 mb-1"
+                        />
+                      )}
                       <div
                         className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                           mine
