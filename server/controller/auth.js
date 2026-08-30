@@ -42,17 +42,6 @@ const parseLoginEnv = (req) => {
   };
 };
 
-// Mobile logins are only allowed 12:00 AM – 12:00 PM IST
-const isWithinMobileLoginWindow = () => {
-  const now = new Date();
-  const istString = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
-  const istNow = new Date(istString);
-  const totalMinutes = istNow.getHours() * 60 + istNow.getMinutes();
-  const windowStart = 0 * 60; // 12:00 AM (midnight)
-  const windowEnd = 12 * 60; // 12:00 PM (noon)
-  return totalMinutes >= windowStart && totalMinutes < windowEnd;
-};
-
 const recordLogin = async (userId, env) => {
   await user.findByIdAndUpdate(userId, {
     $push: {
@@ -115,16 +104,8 @@ export const Login = async (req, res) => {
 
     const env = parseLoginEnv(req);
 
-    // ---- Mobile devices: time-restricted access (12 AM – 12 PM IST only) ----
-    if (env.deviceType === "mobile" && !isWithinMobileLoginWindow()) {
-      return res.status(403).json({
-        message:
-          "Login from mobile devices is only allowed between 12:00 AM and 12:00 PM IST. Please try again during that window.",
-      });
-    }
-
-    // ---- Direct access for all browsers — OTP is only required at signup
-    // and password reset, not on ordinary login. ----
+    // ---- Direct access for all browsers and devices — OTP is only required
+    // at signup and password reset, not on ordinary login. ----
     await recordLogin(exisitinguser._id, env);
     const token = jwt.sign(
       { email: exisitinguser.email, id: exisitinguser._id },
