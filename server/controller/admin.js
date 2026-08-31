@@ -7,6 +7,7 @@ import user from "../models/auth.js";
 import auditLog from "../models/auditLog.js";
 import { deductPoints } from "./points.js";
 import { isOnline, ONLINE_THRESHOLD_MS } from "../utils/onlineStatus.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 // Records a moderation action; failures here are logged but never block the
 // actual admin action from succeeding.
@@ -211,8 +212,8 @@ export const getAllUsersAdmin = async (req, res) => {
     const filter = search
       ? {
           $or: [
-            { name: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
+            { name: { $regex: escapeRegex(search), $options: "i" } },
+            { email: { $regex: escapeRegex(search), $options: "i" } },
           ],
         }
       : {};

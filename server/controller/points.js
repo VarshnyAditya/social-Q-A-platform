@@ -3,6 +3,8 @@ dotenv.config();
 
 import Points from "../models/points.js";
 import User from "../models/auth.js";
+import { safeErrorMessage } from "../utils/safeError.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 // ---- helper: get or create a points doc for a user ----
 const getOrCreate = async (userid) => {
@@ -38,7 +40,8 @@ export const getMyStats = async (req, res) => {
       transactions: doc.transactions.slice().reverse(), // newest first
     });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("POINTS CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -48,7 +51,8 @@ export const getUserStats = async (req, res) => {
     const doc = await getOrCreate(req.params.userid);
     res.status(200).json({ totalPoints: doc.totalPoints });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("POINTS CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -60,12 +64,13 @@ export const searchUsers = async (req, res) => {
       return res.status(400).json({ message: "Enter at least 2 characters to search" });
     }
     const users = await User.find({
-      name: { $regex: name.trim(), $options: "i" },
+      name: { $regex: escapeRegex(name.trim()), $options: "i" },
       _id: { $ne: req.userid }, // exclude self
     }).select("_id name email");
     res.status(200).json({ users });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("POINTS CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -131,6 +136,7 @@ export const transferPoints = async (req, res) => {
       newBalance: senderDoc.totalPoints,
     });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("POINTS CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };

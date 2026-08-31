@@ -3,6 +3,7 @@ dotenv.config();
 import Article from "../models/article.js";
 import user from "../models/auth.js";
 import { createNotification } from "./notification.js";
+import { safeErrorMessage } from "../utils/safeError.js";
 
 // Auto-calculate read time (avg 200 words/min)
 const calcReadTime = (content) => {
@@ -18,7 +19,8 @@ export const getAllArticles = async (req, res) => {
       .sort({ createdAt: -1 });
     res.status(200).json({ data: articles });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("ARTICLE CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -33,7 +35,8 @@ export const getArticle = async (req, res) => {
     if (!article) return res.status(404).json({ message: "Article not found" });
     res.status(200).json({ data: article });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("ARTICLE CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -62,7 +65,8 @@ export const createArticle = async (req, res) => {
 
     res.status(201).json({ data: article });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("ARTICLE CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -77,7 +81,8 @@ export const deleteArticle = async (req, res) => {
     await Article.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Article deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("ARTICLE CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -89,13 +94,20 @@ export const addComment = async (req, res) => {
       return res.status(400).json({ message: "Comment cannot be empty" });
     }
 
+    // Look up the commenter's real name server-side instead of trusting
+    // req.body.username — otherwise any logged-in user could post a comment
+    // that displays as coming from whatever name they typed, impersonating
+    // someone else.
+    const commenter = await user.findById(req.userid).select("name");
+    if (!commenter) return res.status(404).json({ message: "User not found" });
+
     const article = await Article.findByIdAndUpdate(
       req.params.id,
       {
         $push: {
           comments: {
             userid: req.userid,
-            username: req.body.username,
+            username: commenter.name,
             body: body.trim(),
           },
         },
@@ -109,14 +121,15 @@ export const addComment = async (req, res) => {
       userid: article.authorId,
       type: "article_comment",
       fromUserId: req.userid,
-      fromUserName: req.body.username || "Someone",
-      message: `${req.body.username || "Someone"} commented on your article "${article.title}"`,
+      fromUserName: commenter.name,
+      message: `${commenter.name} commented on your article "${article.title}"`,
       link: `/articles/${article._id}`,
     });
 
     res.status(200).json({ data: article });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("ADD COMMENT ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -145,6 +158,7 @@ export const deleteComment = async (req, res) => {
 
     res.status(200).json({ data: article });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("ARTICLE CONTROLLER ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };

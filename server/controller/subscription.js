@@ -5,6 +5,7 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import Subscription from "../models/subscription.js";
 import User from "../models/auth.js";
+import { safeErrorMessage } from "../utils/safeError.js";
 
 // ---- Plan definitions ----
 // Prices are in paise (Razorpay expects the smallest currency unit for INR)
@@ -102,7 +103,8 @@ export const getMyStatus = async (req, res) => {
       expiryDate: sub.expiryDate,
     });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+    console.error("SUBSCRIPTION ERROR:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error) });
   }
 };
 
@@ -141,8 +143,8 @@ export const createOrder = async (req, res) => {
       plan,
     });
   } catch (error) {
-    console.log("Razorpay error full:", error);
-    res.status(500).json({ message: "Failed to create order", error: error.message });
+    console.error("Razorpay order creation error:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error, "Failed to create order") });
   }
 };
 
@@ -212,6 +214,7 @@ export const verifyPayment = async (req, res) => {
       subscription,
     });
   } catch (error) {
-    res.status(500).json({ message: "Payment verification failed", error: error.message });
+    console.error("Payment verification error:", error.message);
+    res.status(500).json({ message: safeErrorMessage(error, "Payment verification failed") });
   }
 };
