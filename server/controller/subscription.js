@@ -30,8 +30,8 @@ const isWithinPaymentWindow = () => {
   const hours = istNow.getHours();
   const minutes = istNow.getMinutes();
   const totalMinutes = hours * 60 + minutes;
-  const windowStart = 10 * 60; // 10:00 AM
-  const windowEnd = 11 * 60; // 11:00 PM
+  const windowStart = 0 * 60; // 12:00 AM (midnight)
+  const windowEnd = 12 * 60; // 12:00 PM (noon)
   return totalMinutes >= windowStart && totalMinutes < windowEnd;
 };
 
@@ -116,7 +116,7 @@ export const createOrder = async (req, res) => {
     // ---- TIME GATE ----
     if (!isWithinPaymentWindow()) {
       return res.status(403).json({
-        message: "Payments are only allowed between 10:00 AM and 11:00 AM IST. Please try again during that window.",
+        message: "Payments are only allowed between 12:00 AM and 12:00 PM IST. Please try again during that window.",
       });
     }
 

@@ -88,7 +88,7 @@ export default function SubscriptionPage() {
       rzp.open();
     } catch (error: any) {
       toast.error(
-        error.response?.data?.message || "Could not start payment. Try again between 10–11 AM IST."
+        error.response?.data?.message || "Could not start payment. Try again between 12 AM – 12 PM IST."
       );
     } finally {
       setLoadingPlan(null);
@@ -115,7 +115,7 @@ export default function SubscriptionPage() {
           {t("pages.subscriptionSubtitle")}
         </p>
         <p className="text-xs text-orange-700 bg-orange-50 border border-orange-200 inline-block px-3 py-1.5 rounded mb-6">
-          ⏰ Payments are accepted only between <strong>10:00 AM – 11:00 AM IST</strong>
+          ⏰ Payments are accepted only between <strong>12:00 AM – 12:00 PM IST</strong>
         </p>
 
         {myStatus && (
