@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Clock, Eye, MessageSquare, Share2, Trash } from "lucide-react";
@@ -108,16 +109,18 @@ export default function ArticleDetailPage() {
   };
 
   const renderContent = (text: string) =>
-    text
-      .replace(/## (.*)/g, '<h2 class="text-xl font-bold mt-8 mb-3 text-gray-900">$1</h2>')
-      .replace(/### (.*)/g, '<h3 class="text-lg font-semibold mt-6 mb-2 text-gray-900">$1</h3>')
-      .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4 text-sm"><code>$2</code></pre>')
-      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm text-red-600">$1</code>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n\n/g, '</p><p class="mb-4 leading-relaxed">')
-      .replace(/^/, '<p class="mb-4 leading-relaxed">')
-      .replace(/$/, "</p>");
+    sanitizeHtml(
+      text
+        .replace(/## (.*)/g, '<h2 class="text-xl font-bold mt-8 mb-3 text-gray-900">$1</h2>')
+        .replace(/### (.*)/g, '<h3 class="text-lg font-semibold mt-6 mb-2 text-gray-900">$1</h3>')
+        .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4 text-sm"><code>$2</code></pre>')
+        .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm text-red-600">$1</code>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p class="mb-4 leading-relaxed">')
+        .replace(/^/, '<p class="mb-4 leading-relaxed">')
+        .replace(/$/, "</p>")
+    );
 
   if (!mounted || loading) {
     return (

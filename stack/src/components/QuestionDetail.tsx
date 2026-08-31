@@ -21,6 +21,7 @@ import { useRouter } from "next/router";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import SaveButton from "./SaveButton";
 
 const QuestionDetail = ({ questionId }: any) => {
@@ -290,13 +291,15 @@ const QuestionDetail = ({ questionId }: any) => {
   };
 
   const renderBody = (text: string) =>
-    text
-      .replace(/## (.*)/g, '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-900">$1</h3>')
-      .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code class="text-sm">$2</code></pre>')
-      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>')
-      .replace(/\n\n/g, '</p><p class="mb-4">')
-      .replace(/^/, '<p class="mb-4">')
-      .replace(/$/, "</p>");
+    sanitizeHtml(
+      text
+        .replace(/## (.*)/g, '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-900">$1</h3>')
+        .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code class="text-sm">$2</code></pre>')
+        .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>')
+        .replace(/\n\n/g, '</p><p class="mb-4">')
+        .replace(/^/, '<p class="mb-4">')
+        .replace(/$/, "</p>")
+    );
 
   const filteredAnswers = getFilteredAnswers();
 

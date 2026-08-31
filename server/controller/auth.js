@@ -63,6 +63,15 @@ const recordLogin = async (userId, env) => {
   });
 };
 
+// Fields safe to return to the account owner themselves (login/signup
+// response, stored client-side). Deliberately excludes password, otp,
+// otpExpiry, loginHistory, friendRequestsSent/Received, and banned —
+// none of those are read from the frontend's stored user object, and
+// shipping them at all means they'd sit in localStorage on every device
+// this account ever logs into, for as long as the user stays logged in.
+const SAFE_OWN_PROFILE_FIELDS =
+  "name email about tags phone joinDate role friends preferredLanguage";
+
 export const Signup = async (req, res) => {
   const { name, email, password, phone } = req.body;
   try {
@@ -79,7 +88,8 @@ export const Signup = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    res.status(200).json({ data: newuser, token });
+    const safeUser = await user.findById(newuser._id).select(SAFE_OWN_PROFILE_FIELDS);
+    res.status(200).json({ data: safeUser, token });
   } catch (error) {
     res.status(500).json("something went wrong..");
   }
@@ -113,7 +123,7 @@ export const Login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    const updatedUser = await user.findById(exisitinguser._id);
+    const updatedUser = await user.findById(exisitinguser._id).select(SAFE_OWN_PROFILE_FIELDS);
     res.status(200).json({ data: updatedUser, token });
   } catch (error) {
     console.log(error);
@@ -151,7 +161,13 @@ export const heartbeat = async (req, res) => {
 
 export const getallusers = async (req, res) => {
   try {
-    const alluser = await user.find();
+    // This endpoint is intentionally public — guests can browse the user
+    // directory and the homepage shows a live user count — so the fix here
+    // isn't to lock it behind auth, it's to make sure it can never return
+    // anything sensitive: no password hash, otp, otpExpiry, email, phone,
+    // loginHistory, friendRequests*, role, or banned status. Only the
+    // fields the public-facing pages actually render.
+    const alluser = await user.find().select("name about tags joinDate");
     res.status(200).json({ data: alluser });
   } catch (error) {
     res.status(500).json("something went wrong..");
@@ -164,15 +180,23 @@ export const updateprofile = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(400).json({ message: "User unavailable" });
   }
+  // Ownership check: this route was only gated on "is logged in", not "is
+  // this your own profile" — without this, any authenticated user could
+  // edit any other account by ID.
+  if (String(req.userid) !== String(_id)) {
+    return res.status(403).json({ message: "You can only edit your own profile" });
+  }
   try {
     const beforeUpdate = await user.findById(_id).select("name");
     const nameChanged = beforeUpdate && beforeUpdate.name !== name;
 
-    const updateprofile = await user.findByIdAndUpdate(
-      _id,
-      { $set: { name, about, tags, phone: phone || "" } },
-      { new: true }
-    );
+    const updateprofile = await user
+      .findByIdAndUpdate(
+        _id,
+        { $set: { name, about, tags, phone: phone || "" } },
+        { new: true }
+      )
+      .select(SAFE_OWN_PROFILE_FIELDS);
 
     // Name is denormalized (copied) onto every question, answer and social
     // post/comment the user has ever made, so a rename doesn't retroactively

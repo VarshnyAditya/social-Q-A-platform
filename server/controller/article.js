@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import Article from "../models/article.js";
+import user from "../models/auth.js";
 import { createNotification } from "./notification.js";
 
 // Auto-calculate read time (avg 200 words/min)
@@ -123,12 +124,25 @@ export const addComment = async (req, res) => {
 export const deleteComment = async (req, res) => {
   try {
     const { commentId } = req.body;
-    const article = await Article.findByIdAndUpdate(
-      req.params.id,
-      { $pull: { comments: { _id: commentId } } },
-      { new: true }
-    );
+    const article = await Article.findById(req.params.id);
     if (!article) return res.status(404).json({ message: "Article not found" });
+
+    const comment = article.comments.id(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    // IDOR fix: this previously deleted any comment by ID with no check at
+    // all — any logged-in user could delete anyone else's comment on any
+    // article. Only the comment's own author or an admin can remove it.
+    const requester = await user.findById(req.userid).select("role");
+    const isOwner = String(comment.userid) === String(req.userid);
+    const isAdmin = requester?.role === "admin";
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "You can only delete your own comments" });
+    }
+
+    article.comments.pull({ _id: commentId });
+    await article.save();
+
     res.status(200).json({ data: article });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong", error: error.message });

@@ -78,10 +78,15 @@ const index = () => {
         name: users.name || "",
         about: users.about || "",
         tags: users.tags || [],
-        phone: users.phone || "",
+        // The public directory (`users`, from getalluser) no longer includes
+        // phone — it's not something every visitor should be able to fetch
+        // for any user. This dialog only ever opens for your own profile
+        // (see isOwnProfile below), so your own phone from the authenticated
+        // session is the right — and only available — source here.
+        phone: user?.phone || "",
       });
     }
-  }, [isEditing, users]);
+  }, [isEditing, users, user]);
 
   // Reward points are public — anyone viewing this profile sees this user's total,
   // same as the Reward Tab, since both now read from the same Points collection.

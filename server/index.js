@@ -20,11 +20,46 @@ import teamroutes from "./routes/team.js";
 import reportroutes from "./routes/report.js";
 import adminroutes from "./routes/admin.js";
 import notificationroutes from "./routes/notification.js";
+import { generalLimiter } from "./middleware/rateLimit.js";
 
 const app = express();
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
-app.use(cors());
+
+// CORS allowlist — was previously wide open (cors() with no options reflects
+// Access-Control-Allow-Origin for literally any requesting origin). Reads
+// allowed origins from FRONTEND_URL (comma-separated if you have more than
+// one deployed frontend, e.g. a Vercel prod URL + preview URL), always
+// includes localhost:3000 for local dev. Requests with no Origin header
+// (curl, Postman, server-to-server, mobile apps) are still allowed through,
+// since those aren't the browser-based cross-origin scenario CORS guards
+// against — set FRONTEND_URL in your Render/production env to lock this down.
+const allowedOrigins = [
+  "http://localhost:3000",
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map((o) => o.trim()) : []),
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+// Reverse proxies (Render, Vercel) sit in front of this app — without this,
+// Express has no way to know which X-Forwarded-For hop to trust, which
+// matters for accurate IP logging (see loginHistory) and any future
+// IP-based rate limiting.
+app.set("trust proxy", 1);
+
+// Baseline rate limit, app-wide. Routes below with their own login/OTP/
+// translation limiters get the tighter of the two automatically, since
+// express-rate-limit tracks each limiter's own counter independently.
+app.use(generalLimiter);
 
 app.get("/", (req, res) => {
   res.send("Stackoverflow clone is running perfect");
