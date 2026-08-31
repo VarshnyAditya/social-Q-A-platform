@@ -56,7 +56,7 @@ export default function SubscriptionPage() {
         key: data.keyId,
         amount: data.amount,
         currency: data.currency,
-        name: "StackClone",
+        name: "CodeQuest",
         description: `${planKey.toUpperCase()} Plan Subscription`,
         order_id: data.orderId,
         handler: async function (response: any) {

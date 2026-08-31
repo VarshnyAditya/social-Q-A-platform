@@ -47,9 +47,9 @@ const transporter = nodemailer.createTransport({
 const sendInvoiceEmail = async ({ to, name, plan, amount, paymentId, date }) => {
   const amountInRupees = (amount / 100).toFixed(2);
   const mailOptions = {
-    from: `"StackClone Billing" <${process.env.EMAIL_USER}>`,
+    from: `"CodeQuest Billing" <${process.env.EMAIL_USER}>`,
     to,
-    subject: `Your ${PLANS[plan].label} Plan Invoice — StackClone`,
+    subject: `Your ${PLANS[plan].label} Plan Invoice — CodeQuest`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 24px;">
         <h2 style="color: #ef8236;">Payment Successful 🎉</h2>

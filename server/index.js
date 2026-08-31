@@ -73,7 +73,7 @@ app.set("trust proxy", 1);
 app.use(generalLimiter);
 
 app.get("/", (req, res) => {
-  res.send("Stackoverflow clone is running perfect");
+  res.send("CodeQuest is running perfect");
 });
 
 app.use("/user", userroutes);
