@@ -44,6 +44,7 @@ const parseLoginEnv = (req) => {
 
 const recordLogin = async (userId, env) => {
   await user.findByIdAndUpdate(userId, {
+    lastActiveAt: new Date(),
     $push: {
       loginHistory: {
         $each: [
@@ -132,6 +133,17 @@ export const getLoginHistory = async (req, res) => {
     if (!existingUser) return res.status(404).json({ message: "User not found" });
     const recentHistory = (existingUser.loginHistory || []).slice(0, 5);
     res.status(200).json({ data: recentHistory });
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// ---- Online/offline status: a lightweight ping the frontend calls every
+// ~20s while the app is open, so "online" can be derived without websockets.
+export const heartbeat = async (req, res) => {
+  try {
+    await user.findByIdAndUpdate(req.userid, { lastActiveAt: new Date() });
+    res.status(200).json({ ok: true });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
   }

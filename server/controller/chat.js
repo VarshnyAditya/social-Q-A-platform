@@ -1,6 +1,7 @@
 import message from "../models/chat.js";
 import user from "../models/auth.js";
 import { createNotification } from "./notification.js";
+import { isOnline } from "../utils/onlineStatus.js";
 
 // Friendship is symmetric — both users' `friends` arrays are kept in sync
 // when a request is accepted (see social.js: acceptFriendRequest), so
@@ -99,7 +100,7 @@ export const getConversationsList = async (req, res) => {
     const currentUser = await user.findById(userid).select("friends");
     if (!currentUser) return res.status(404).json({ message: "User not found" });
 
-    const friends = await user.find({ _id: { $in: currentUser.friends } }).select("name _id");
+    const friends = await user.find({ _id: { $in: currentUser.friends } }).select("name _id lastActiveAt");
 
     const list = await Promise.all(
       friends.map(async (friend) => {
@@ -120,6 +121,8 @@ export const getConversationsList = async (req, res) => {
         return {
           friendId: fid,
           name: friend.name,
+          online: isOnline(friend.lastActiveAt),
+          lastActiveAt: friend.lastActiveAt,
           lastMessage: lastMessage
             ? {
                 text: lastMessage.text,

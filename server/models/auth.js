@@ -15,6 +15,16 @@ const userschema = mongoose.Schema({
   friends: { type: [String], default: [] },
   friendRequestsSent: { type: [String], default: [] },
   friendRequestsReceived: { type: [String], default: [] },
+  // Bumped by a heartbeat ping every ~20s while the app is open in a tab,
+  // and on login — "online" is derived by comparing this to now, rather
+  // than tracking connections directly (no websockets in this app).
+  // IMPORTANT: no `default` here on purpose. If this were defaulted to
+  // Date.now, Mongoose fills that default in every time it reads back an
+  // existing user document that doesn't have this field stored yet (e.g.
+  // every account created before this feature) — making everyone look
+  // "just active" even if they've never sent a heartbeat. Leaving it
+  // unset means a user with no real activity correctly reads as offline.
+  lastActiveAt: { type: Date, default: null },
   lastPasswordReset: { type: Date, default: null },
   otp: { type: String, default: null },
   otpExpiry: { type: Date, default: null },

@@ -2,6 +2,7 @@ import Mainlayout from "@/layout/Mainlayout";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { formatPresence } from "@/lib/utils";
 import { ArrowLeft, Film, Image as ImageIcon, Paperclip, Send, User, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -13,6 +14,8 @@ const MAX_MEDIA_BYTES = 30 * 1024 * 1024; // 30MB, matches the server-side cap
 interface ConversationEntry {
   friendId: string;
   name: string;
+  online: boolean;
+  lastActiveAt: string | null;
   lastMessage: {
     text: string;
     mediaType: string;
@@ -168,6 +171,13 @@ export default function ChatPage() {
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+  // The header should reflect live online/last-seen status, not just the
+  // snapshot taken when the conversation was opened — `list` already
+  // refreshes every 4s via polling, so re-derive from it on each render.
+  const activeEntry = activeFriend
+    ? list.find((c) => c.friendId === activeFriend.friendId) || activeFriend
+    : null;
+
   if (!user) {
     return (
       <Mainlayout>
@@ -208,9 +218,17 @@ export default function ChatPage() {
                   }`}
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{entry.name}</p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {entry.lastMessage
+                    <p className="text-sm font-medium text-gray-900 truncate flex items-center gap-1.5">
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                          entry.online ? "bg-green-500" : "bg-gray-300"
+                        }`}
+                        aria-label={entry.online ? "Online" : "Offline"}
+                        title={formatPresence(entry.online, entry.lastActiveAt)}
+                      />
+                      {entry.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">                      {entry.lastMessage
                         ? entry.lastMessage.mediaType !== "none" && !entry.lastMessage.text
                           ? entry.lastMessage.fromMe
                             ? `You: sent a ${entry.lastMessage.mediaType}`
@@ -246,9 +264,20 @@ export default function ChatPage() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <p className="font-medium text-gray-900 flex-1 min-w-0 truncate">
-                  {activeFriend.name}
-                </p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate flex items-center gap-1.5">
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                        activeEntry?.online ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    {activeFriend.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {formatPresence(!!activeEntry?.online, activeEntry?.lastActiveAt)}
+                  </p>
+                </div>
                 <Link
                   href={`/users/${activeFriend.friendId}`}
                   className="flex-shrink-0 flex items-center gap-1 text-xs font-medium text-orange-600 border border-orange-300 hover:bg-orange-50 px-3 py-1.5 rounded-full transition"

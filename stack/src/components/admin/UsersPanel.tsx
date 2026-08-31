@@ -3,7 +3,8 @@ import axiosInstance from "@/lib/axiosinstance";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ShieldOff, ShieldCheck, UserX } from "lucide-react";
+import { formatPresence } from "@/lib/utils";
+import { Search, ShieldOff, ShieldCheck, UserX, Circle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -14,6 +15,8 @@ interface AdminUser {
   role: "user" | "admin";
   banned: boolean;
   joinDate: string;
+  online: boolean;
+  lastActiveAt: string | null;
 }
 
 export default function UsersPanel() {
@@ -22,6 +25,7 @@ export default function UsersPanel() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
 
   const fetchUsers = async (q = "") => {
     setLoading(true);
@@ -35,8 +39,22 @@ export default function UsersPanel() {
     }
   };
 
+  const fetchOnlineCount = async () => {
+    try {
+      const res = await axiosInstance.get("/admin/online-count");
+      setOnlineCount(res.data.count ?? 0);
+    } catch {
+      // silent — badge just won't update this cycle
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchOnlineCount();
+    // Keep the online count fresh without requiring a manual refresh —
+    // matches the ~20s heartbeat interval users are pinging on.
+    const interval = setInterval(fetchOnlineCount, 20000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -60,6 +78,14 @@ export default function UsersPanel() {
 
   return (
     <div>
+      <div className="flex items-center gap-2 mb-4">
+        <Circle className="w-2.5 h-2.5 fill-green-500 text-green-500" />
+        <p className="text-sm text-gray-700">
+          <span className="font-semibold text-gray-900">{onlineCount ?? "..."}</span>{" "}
+          {onlineCount === 1 ? "user" : "users"} currently online
+        </p>
+      </div>
+
       <form onSubmit={handleSearch} className="flex gap-2 mb-6">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -90,6 +116,12 @@ export default function UsersPanel() {
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                        u.online ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                      aria-label={u.online ? "Online" : "Offline"}
+                    />
                     <p className="text-sm font-medium text-gray-900 truncate">{u.name}</p>
                     {u.role === "admin" && (
                       <Badge className="bg-orange-100 text-orange-800 text-[10px]">Admin</Badge>
@@ -104,6 +136,9 @@ export default function UsersPanel() {
                     )}
                   </div>
                   <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                  <p className="text-[11px] text-gray-400">
+                    {formatPresence(u.online, u.lastActiveAt)}
+                  </p>
                 </div>
 
                 <div className="flex gap-2 flex-shrink-0">

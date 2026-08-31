@@ -6,6 +6,7 @@ import teamMessage from "../models/teamMessage.js";
 import user from "../models/auth.js";
 import auditLog from "../models/auditLog.js";
 import { deductPoints } from "./points.js";
+import { isOnline, ONLINE_THRESHOLD_MS } from "../utils/onlineStatus.js";
 
 // Records a moderation action; failures here are logged but never block the
 // actual admin action from succeeding.
@@ -217,10 +218,27 @@ export const getAllUsersAdmin = async (req, res) => {
       : {};
     const users = await user
       .find(filter)
-      .select("name email role banned joinDate")
+      .select("name email role banned joinDate lastActiveAt")
       .sort({ joinDate: -1 })
       .limit(100);
-    res.status(200).json({ data: users });
+    const withOnlineStatus = users.map((u) => ({
+      ...u.toObject(),
+      online: isOnline(u.lastActiveAt),
+    }));
+    res.status(200).json({ data: withOnlineStatus });
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// GET /admin/online-count — how many users are currently online, for the
+// admin dashboard header.
+export const getOnlineCount = async (req, res) => {
+  try {
+    const count = await user.countDocuments({
+      lastActiveAt: { $gte: new Date(Date.now() - ONLINE_THRESHOLD_MS) },
+    });
+    res.status(200).json({ count });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
   }

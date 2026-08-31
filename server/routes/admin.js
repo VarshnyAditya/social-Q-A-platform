@@ -11,6 +11,7 @@ import {
   adminRemoveTeamMember,
   adminDeleteTeamMessage,
   getAllUsersAdmin,
+  getOnlineCount,
   banUser,
   unbanUser,
   promoteToAdmin,
@@ -37,6 +38,7 @@ router.delete("/team/:id/member/:userId", adminRemoveTeamMember);
 router.delete("/teammessage/:id", adminDeleteTeamMessage);
 
 router.get("/users", getAllUsersAdmin);
+router.get("/online-count", getOnlineCount);
 router.patch("/users/:id/ban", banUser);
 router.patch("/users/:id/unban", unbanUser);
 router.patch("/users/:id/promote", promoteToAdmin);

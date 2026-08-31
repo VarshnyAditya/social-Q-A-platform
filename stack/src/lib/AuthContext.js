@@ -15,6 +15,22 @@ export const AuthProvider = ({ children }) => {
     if (stored) setUser(JSON.parse(stored));
   }, []);
 
+  // Online/offline: ping the backend every 20s while logged in so other
+  // users can see this account as "online" (see server/utils/onlineStatus.js
+  // for how the threshold is applied). No websockets — just a heartbeat.
+  useEffect(() => {
+    if (!user) return;
+    const HEARTBEAT_INTERVAL_MS = 20000;
+    const ping = () => {
+      axiosInstance.patch("/user/heartbeat").catch(() => {
+        // silent — a missed heartbeat just means the user briefly shows offline
+      });
+    };
+    ping();
+    const interval = setInterval(ping, HEARTBEAT_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [user?._id]);
+
   const Signup = async ({ name, email, password, phone }) => {
     setloading(true);
     seterror(null);

@@ -9,6 +9,7 @@ import {
   verifyOTP,
   resetPasswordAfterOTP,
   getLoginHistory,
+  heartbeat,
 } from "../controller/auth.js";
 import auth from "../middleware/auth.js";
 
@@ -23,5 +24,6 @@ router.post("/send-otp", sendOTP);
 router.post("/verify-otp", verifyOTP);
 router.post("/reset-password-otp", resetPasswordAfterOTP);
 router.get("/login-history/:id", auth, getLoginHistory);
+router.patch("/heartbeat", auth, heartbeat);
 
 export default router;
