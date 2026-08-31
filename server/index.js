@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import mongoose from "mongoose";
 import userroutes from "./routes/auth.js";
 import questionroute from "./routes/question.js";
@@ -23,6 +24,16 @@ import notificationroutes from "./routes/notification.js";
 import { generalLimiter } from "./middleware/rateLimit.js";
 
 const app = express();
+
+// Security headers — X-Content-Type-Options, X-Frame-Options (blocks
+// clickjacking via iframe embedding), Strict-Transport-Security (enforces
+// HTTPS-only at the browser level once served over HTTPS), a default
+// Content-Security-Policy, and more, all in one line. Safe to use with
+// defaults here since this server only ever returns JSON (or a plain-text
+// health check on "/") — it never renders HTML itself, so there's no markup
+// or inline scripts of ours that a default CSP could conflict with.
+app.use(helmet());
+
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 
