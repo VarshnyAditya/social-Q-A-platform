@@ -21,12 +21,9 @@ router.post("/login", loginLimiter, Login);
 // Intentionally public — see the field-projection comment in the controller.
 router.get("/getalluser", getallusers);
 router.patch("/update/:id", auth, updateprofile);
-// Legacy endpoint: resets a password from just an email, no OTP step, capped
-// at once/day server-side. Nothing in the current frontend calls it — the
-// live "forgot password" flow is send-otp -> verify-otp -> reset-password-otp
-// below. Rate-limited here as a stopgap; flagged separately as its own
-// finding since leaving an unauthenticated instant-reset path reachable at
-// all is a bigger question than rate limiting can fully answer.
+// Deliberately kept as a route (returning 410, see controller) rather than
+// deleted outright, so any old/external caller gets a clear "this is gone"
+// instead of a generic 404. See controller/auth.js for why it was removed.
 router.post("/forgot-password", loginLimiter, forgotPassword);
 router.post("/send-otp", otpSendLimiter, sendOTP);
 router.post("/verify-otp", otpVerifyLimiter, verifyOTP);

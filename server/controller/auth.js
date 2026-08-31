@@ -7,15 +7,6 @@ import jwt from "jsonwebtoken";
 import { UAParser } from "ua-parser-js";
 import { sendOTPEmail } from "../utils/mailer.js";
 
-const generateLettersPassword = (length = 12) => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-  let password = "";
-  for (let i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-};
-
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -346,32 +337,16 @@ export const resetPasswordAfterOTP = async (req, res) => {
 };
 
 export const forgotPassword = async (req, res) => {
-  const { email, customPassword } = req.body;
-  if (!email) return res.status(400).json({ message: "Email is required" });
-  if (customPassword) {
-    const lettersOnly = /^[a-zA-Z]+$/;
-    if (!lettersOnly.test(customPassword))
-      return res.status(400).json({ message: "Password must contain only uppercase and lowercase letters." });
-    if (customPassword.length < 6)
-      return res.status(400).json({ message: "Password must be at least 6 characters." });
-  }
-  try {
-    const existingUser = await user.findOne({ email });
-    if (!existingUser) return res.status(404).json({ message: "No account found with this email" });
-    if (existingUser.lastPasswordReset) {
-      const lastReset = new Date(existingUser.lastPasswordReset);
-      const now = new Date();
-      const isSameDay =
-        lastReset.getFullYear() === now.getFullYear() &&
-        lastReset.getMonth() === now.getMonth() &&
-        lastReset.getDate() === now.getDate();
-      if (isSameDay) return res.status(429).json({ message: "You can use this option only one time per day." });
-    }
-    const finalPassword = customPassword || generateLettersPassword(12);
-    const hashedPassword = await bcrypt.hash(finalPassword, 12);
-    await user.findByIdAndUpdate(existingUser._id, { password: hashedPassword, lastPasswordReset: new Date() });
-    res.status(200).json({ message: "Password reset successful", newPassword: finalPassword, name: existingUser.name });
-  } catch (error) {
-    res.status(500).json({ message: "Something went wrong" });
-  }
+  // Removed: this endpoint reset a password from just an email address, with
+  // no OTP verification — an unauthenticated account-takeover path, and it
+  // also handed the newly generated plaintext password straight back in the
+  // response body. Nothing in the frontend called this route; the real
+  // "forgot password" flow is send-otp -> verify-otp -> reset-password-otp.
+  // Kept as a 410 (not just deleted outright) in case anything external was
+  // still pointed at this path, so it fails loudly and obviously instead of
+  // silently 404ing.
+  return res.status(410).json({
+    message:
+      "This endpoint has been removed. Please use the OTP-based reset flow (send-otp -> verify-otp -> reset-password-otp) instead.",
+  });
 };
