@@ -77,7 +77,7 @@ export const Signup = async (req, res) => {
     const token = jwt.sign(
       { email: newuser.email, id: newuser._id },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d", algorithm: "HS256" }
     );
     const safeUser = await user.findById(newuser._id).select(SAFE_OWN_PROFILE_FIELDS);
     res.status(200).json({ data: safeUser, token });
@@ -112,7 +112,7 @@ export const Login = async (req, res) => {
     const token = jwt.sign(
       { email: exisitinguser.email, id: exisitinguser._id },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d", algorithm: "HS256" }
     );
     const updatedUser = await user.findById(exisitinguser._id).select(SAFE_OWN_PROFILE_FIELDS);
     res.status(200).json({ data: updatedUser, token });
