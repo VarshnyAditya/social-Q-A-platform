@@ -65,6 +65,21 @@ export const getAllTeams = async (req, res) => {
   }
 };
 
+// GET /team/mine — team ids the logged-in user already belongs to (creator
+// included, since createTeam adds them to `members`). The public /getall
+// list has no auth middleware (guests can browse teams), so it has no way
+// to know who's asking — the frontend cross-references this list instead
+// to decide whether to show "Join" or "Joined" per team.
+export const getMyTeamIds = async (req, res) => {
+  const userid = req.userid;
+  try {
+    const myTeams = await team.find({ members: String(userid) }).select("_id");
+    res.status(200).json({ data: myTeams.map((t) => String(t._id)) });
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 export const getTeam = async (req, res) => {
   try {
     const { id } = req.params;

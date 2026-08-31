@@ -2,6 +2,7 @@ import express from "express";
 import {
   createTeam,
   getAllTeams,
+  getMyTeamIds,
   getTeam,
   joinTeam,
   getTeamMessages,
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.post("/create", auth, createTeam);
 router.get("/getall", getAllTeams);
+router.get("/mine", auth, getMyTeamIds);
 router.get("/get/:id", getTeam);
 router.post("/join/:id", auth, joinTeam);
 router.get("/:id/messages", auth, getTeamMessages);

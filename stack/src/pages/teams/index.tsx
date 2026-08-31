@@ -23,6 +23,7 @@ export default function TeamsPage() {
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [myTeamIds, setMyTeamIds] = useState<Set<string>>(new Set());
 
   const fetchTeams = async () => {
     try {
@@ -35,9 +36,27 @@ export default function TeamsPage() {
     }
   };
 
+  const fetchMyTeams = async () => {
+    if (!user) {
+      setMyTeamIds(new Set());
+      return;
+    }
+    try {
+      const res = await axiosInstance.get("/team/mine");
+      setMyTeamIds(new Set(res.data.data || []));
+    } catch {
+      console.log("Could not fetch your teams");
+    }
+  };
+
   useEffect(() => {
     fetchTeams();
   }, []);
+
+  useEffect(() => {
+    fetchMyTeams();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleJoin = async (id: string) => {
     if (!user) {
@@ -48,6 +67,7 @@ export default function TeamsPage() {
     try {
       await axiosInstance.post(`/team/join/${id}`);
       toast.success("You've joined the team");
+      setMyTeamIds((prev) => new Set(prev).add(id));
       fetchTeams();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Could not join team");
@@ -109,6 +129,13 @@ export default function TeamsPage() {
                   <span className="flex-shrink-0 text-sm font-medium text-gray-500 bg-gray-100 px-4 py-1.5 rounded-full select-none">
                     Admin
                   </span>
+                ) : user && myTeamIds.has(team._id) ? (
+                  <Link
+                    href={`/teams/${team._id}`}
+                    className="flex-shrink-0 text-sm font-medium text-green-700 bg-green-50 px-4 py-1.5 rounded-full select-none hover:bg-green-100 transition"
+                  >
+                    Joined
+                  </Link>
                 ) : (
                   <button
                     onClick={() => handleJoin(team._id)}
