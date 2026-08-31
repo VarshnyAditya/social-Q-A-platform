@@ -32,6 +32,7 @@ interface FriendData {
   friends: { _id: string; name: string }[];
   requests: { _id: string; name: string }[];
   friendCount: number;
+  sentRequestIds: string[];
 }
 
 export default function SocialPage() {
@@ -249,6 +250,9 @@ export default function SocialPage() {
   const isFriend = (uid: string) =>
     friendData?.friends.some((f) => f._id === uid);
 
+  const hasSentRequest = (uid: string) =>
+    !!friendData?.sentRequestIds?.includes(uid);
+
   if (loading) {
     return (
       <Mainlayout>
@@ -378,6 +382,7 @@ export default function SocialPage() {
               const liked = user && post.likes.includes(String(user._id));
               const isOwn = user && post.userid === String(user._id);
               const alreadyFriend = isFriend(post.userid);
+              const requestSent = hasSentRequest(post.userid);
 
               return (
                 <div key={post._id} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
@@ -393,13 +398,18 @@ export default function SocialPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {user && !isOwn && !alreadyFriend && (
+                      {user && !isOwn && !alreadyFriend && !requestSent && (
                         <button
                           onClick={() => handleSendRequest(post.userid)}
                           className="flex items-center gap-1 text-xs text-blue-600 border border-blue-300 px-2 py-1 rounded hover:bg-blue-50"
                         >
                           <UserPlus className="w-3 h-3" /> Add Friend
                         </button>
+                      )}
+                      {user && !isOwn && !alreadyFriend && requestSent && (
+                        <span className="text-xs text-gray-500 flex items-center gap-1 border border-gray-200 bg-gray-50 px-2 py-1 rounded">
+                          <Check className="w-3 h-3" /> Sent
+                        </span>
                       )}
                       {alreadyFriend && (
                         <span className="text-xs text-green-600 flex items-center gap-1">
@@ -533,22 +543,31 @@ export default function SocialPage() {
               {allUsers
                 .filter((u) => u._id !== String(user._id) && !isFriend(u._id))
                 .slice(0, 5)
-                .map((u) => (
-                  <div key={u._id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-bold">
-                        {u.name?.charAt(0).toUpperCase()}
+                .map((u) => {
+                  const requestSent = hasSentRequest(u._id);
+                  return (
+                    <div key={u._id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-bold">
+                          {u.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm">{u.name}</span>
                       </div>
-                      <span className="text-sm">{u.name}</span>
+                      {requestSent ? (
+                        <span className="flex items-center gap-1 text-xs text-gray-500 border border-gray-200 bg-gray-50 px-2 py-1 rounded">
+                          <Check className="w-3 h-3" /> Sent
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleSendRequest(u._id)}
+                          className="flex items-center gap-1 text-xs text-blue-600 border border-blue-300 px-2 py-1 rounded hover:bg-blue-50"
+                        >
+                          <UserPlus className="w-3 h-3" /> Add
+                        </button>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleSendRequest(u._id)}
-                      className="flex items-center gap-1 text-xs text-blue-600 border border-blue-300 px-2 py-1 rounded hover:bg-blue-50"
-                    >
-                      <UserPlus className="w-3 h-3" /> Add
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         )}

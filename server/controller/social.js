@@ -287,6 +287,11 @@ export const getMyFriendData = async (req, res) => {
         friends: friendDetails,
         requests: requestDetails,
         friendCount: currentUser.friends.length,
+        // Outgoing requests the user has already sent but haven't been
+        // accepted yet — lets the frontend show "Sent" instead of "Add"
+        // for those people, instead of only ever knowing about friends
+        // and incoming requests.
+        sentRequestIds: currentUser.friendRequestsSent,
       },
     });
   } catch (error) {
