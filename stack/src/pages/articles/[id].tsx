@@ -7,7 +7,7 @@ import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Clock, Eye, MessageSquare, Share2, Trash } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -186,11 +186,7 @@ export default function ArticleDetailPage() {
         {/* Meta row */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b">
           <div className="flex items-center gap-3">
-            <Avatar className="w-9 h-9">
-              <AvatarFallback className="bg-blue-100 text-blue-800 font-bold">
-                {article.authorName?.[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar userId={article.authorId} name={article.authorName} size="md" />
             <div>
               <p className="text-sm font-medium text-gray-900">{article.authorName}</p>
               <p className="text-xs text-gray-400">
@@ -269,11 +265,7 @@ export default function ArticleDetailPage() {
             <div className="space-y-4">
               {article.comments.map((c: any) => (
                 <div key={c._id} className="flex gap-3 p-4 bg-gray-50 rounded-lg">
-                  <Avatar className="w-8 h-8 flex-shrink-0">
-                    <AvatarFallback className="bg-blue-100 text-blue-800 text-xs font-bold">
-                      {c.username?.[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar userId={c.userid} name={c.username} size="sm" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">

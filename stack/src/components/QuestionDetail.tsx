@@ -14,7 +14,6 @@ import { Button } from "./ui/button";
 import ReportButton from "./ReportButton";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
-import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
 import { toast } from "react-toastify";
 import { useRouter } from "next/router";
@@ -22,6 +21,7 @@ import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import UserAvatar from "@/components/UserAvatar";
 import SaveButton from "./SaveButton";
 
 const QuestionDetail = ({ questionId }: any) => {
@@ -420,9 +420,7 @@ const QuestionDetail = ({ questionId }: any) => {
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-gray-600">{t("questions.askedOn")} {new Date(question.askedon).toLocaleDateString()}</span>
                   <Link href={`/users/${question.userid}`} className="flex items-center gap-2 hover:bg-blue-50 p-2 rounded">
-                    <Avatar className="w-8 h-8">
-                      <AvatarFallback className="text-sm">{question.userposted[0]}</AvatarFallback>
-                    </Avatar>
+                    <UserAvatar userId={question.userid} name={question.userposted} size="sm" />
                     <div className="text-blue-600 hover:text-blue-800 font-medium">{question.userposted}</div>
                   </Link>
                 </div>
@@ -549,9 +547,7 @@ const QuestionDetail = ({ questionId }: any) => {
                             {t("questions.answeredOn")} {new Date(ans.answeredon).toLocaleDateString()}
                           </span>
                           <Link href={`/users/${ans.userid}`} className="flex items-center gap-2 hover:bg-blue-50 p-2 rounded">
-                            <Avatar className="w-8 h-8">
-                              <AvatarFallback className="text-sm">{ans.useranswered[0]}</AvatarFallback>
-                            </Avatar>
+                            <UserAvatar userId={ans.userid} name={ans.useranswered} size="sm" />
                             <div className="text-blue-600 hover:text-blue-800 font-medium">
                               {ans.useranswered}
                             </div>

@@ -4,6 +4,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { formatPresence } from "@/lib/utils";
 import { ArrowLeft, Film, Image as ImageIcon, Paperclip, Send, User, X } from "lucide-react";
+import UserAvatar from "@/components/UserAvatar";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
@@ -217,17 +218,9 @@ export default function ChatPage() {
                     activeFriend?.friendId === entry.friendId ? "bg-orange-50" : ""
                   }`}
                 >
+                  <UserAvatar userId={entry.friendId} name={entry.name} size="sm" online={entry.online} />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate flex items-center gap-1.5">
-                      <span
-                        className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
-                          entry.online ? "bg-green-500" : "bg-gray-300"
-                        }`}
-                        aria-label={entry.online ? "Online" : "Offline"}
-                        title={formatPresence(entry.online, entry.lastActiveAt)}
-                      />
-                      {entry.name}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{entry.name}</p>
                     <p className="text-xs text-gray-500 truncate">                      {entry.lastMessage
                         ? entry.lastMessage.mediaType !== "none" && !entry.lastMessage.text
                           ? entry.lastMessage.fromMe
@@ -264,16 +257,14 @@ export default function ChatPage() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
+                <UserAvatar
+                  userId={activeFriend.friendId}
+                  name={activeFriend.name}
+                  size="sm"
+                  online={!!activeEntry?.online}
+                />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate flex items-center gap-1.5">
-                    <span
-                      className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
-                        activeEntry?.online ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                      aria-hidden="true"
-                    />
-                    {activeFriend.name}
-                  </p>
+                  <p className="font-medium text-gray-900 truncate">{activeFriend.name}</p>
                   <p className="text-xs text-gray-500">
                     {formatPresence(!!activeEntry?.online, activeEntry?.lastActiveAt)}
                   </p>

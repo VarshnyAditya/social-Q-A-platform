@@ -1,7 +1,7 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import UserAvatar from "@/components/UserAvatar";
 import {
   Dialog,
   DialogContent,
@@ -277,14 +277,7 @@ const index = () => {
       <div className="max-w-6xl">
         {/* User Header */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 mb-8">
-          <Avatar className="w-24 h-24 lg:w-32 lg:h-32">
-            <AvatarFallback className="text-2xl lg:text-3xl">
-              {users.name
-                .split(" ")
-                .map((n: any) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar userId={users._id} name={users.name} size="xl" />
 
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">

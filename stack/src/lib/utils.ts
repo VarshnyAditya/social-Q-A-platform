@@ -25,3 +25,42 @@ export function formatPresence(online: boolean, lastActiveAt?: string | Date | n
   if (!lastActiveAt) return "Offline";
   return `Last seen ${timeAgo(lastActiveAt)}`;
 }
+
+// A fixed palette of solid, white-text-friendly colors — picked deterministically
+// from a user's id so the same person always gets the same color everywhere
+// (chat, profile, comments, etc.), and two people with the same display name
+// are visually distinguishable at a glance instead of being indistinguishable
+// gray circles.
+const AVATAR_PALETTE = [
+  "bg-orange-500",
+  "bg-blue-500",
+  "bg-emerald-500",
+  "bg-purple-500",
+  "bg-pink-500",
+  "bg-teal-500",
+  "bg-red-500",
+  "bg-indigo-500",
+  "bg-cyan-600",
+  "bg-fuchsia-500",
+];
+
+export function getAvatarColor(id: string): string {
+  const key = id || "?";
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash << 5) - hash + key.charCodeAt(i);
+    hash |= 0; // keep it a 32-bit int
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+// Up to two letters — first letters of the first two words of a name — so
+// "Charlar Sharma" becomes "CS" instead of just "C". Falls back gracefully
+// for single-word names or missing data.
+export function getInitials(name?: string | null): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}

@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
@@ -7,6 +6,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { Calendar, Search, Users } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import UserAvatar from "@/components/UserAvatar";
 
 const UsersPage = () => {
   const { user: currentUser } = useAuth();
@@ -111,14 +111,7 @@ const UsersPage = () => {
                   )}
 
                   <div className="flex items-center mb-3">
-                    <Avatar className="w-12 h-12 mr-3">
-                      <AvatarFallback className={`text-lg ${isFriend && !isMe ? "bg-green-100 text-green-700" : ""}`}>
-                        {user.name
-                          .split(" ")
-                          .map((n: any) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar userId={user._id} name={user.name} size="lg" className="mr-3" />
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-blue-600 hover:text-blue-800 truncate">
                         {user.name}

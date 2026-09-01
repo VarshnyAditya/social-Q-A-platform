@@ -4,6 +4,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { Heart, MessageCircle, Share2, UserPlus, Check, Send, X, Trash2 } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
+import UserAvatar from "@/components/UserAvatar";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -278,7 +279,10 @@ export default function SocialPage() {
             <div className="space-y-2">
               {friendData.requests.map((req) => (
                 <div key={req._id} className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{req.name}</span>
+                  <div className="flex items-center gap-2">
+                    <UserAvatar userId={req._id} name={req.name} size="sm" />
+                    <span className="text-sm font-medium">{req.name}</span>
+                  </div>
                   <button
                     onClick={() => handleAcceptRequest(req._id)}
                     className="flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
@@ -295,9 +299,7 @@ export default function SocialPage() {
         {user && (
           <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
-                {user.name?.charAt(0).toUpperCase()}
-              </div>
+              <UserAvatar userId={String(user._id)} name={user.name} size="sm" />
               <span className="font-medium text-sm">{user.name}</span>
               <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
                 {limitLabel}
@@ -389,9 +391,7 @@ export default function SocialPage() {
                   {/* Header */}
                   <div className="flex items-center justify-between px-4 pt-4 pb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
-                        {post.username?.charAt(0).toUpperCase()}
-                      </div>
+                      <UserAvatar userId={post.userid} name={post.username} size="sm" />
                       <div>
                         <p className="text-sm font-semibold">{post.username}</p>
                         <p className="text-xs text-gray-400">{new Date(post.postedon).toLocaleString()}</p>
@@ -495,9 +495,7 @@ export default function SocialPage() {
                         )}
                         {post.comments.map((c) => (
                           <div key={c._id} className="flex gap-2 items-start">
-                            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                              {c.username?.charAt(0).toUpperCase()}
-                            </div>
+                            <UserAvatar userId={c.userid} name={c.username} size="xs" />
                             <div className="bg-white rounded px-2 py-1 text-xs flex-1">
                               <span className="font-semibold">{c.username}: </span>
                               {c.text}
@@ -548,9 +546,7 @@ export default function SocialPage() {
                   return (
                     <div key={u._id} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-bold">
-                          {u.name?.charAt(0).toUpperCase()}
-                        </div>
+                        <UserAvatar userId={u._id} name={u.name} size="sm" />
                         <span className="text-sm">{u.name}</span>
                       </div>
                       {requestSent ? (
