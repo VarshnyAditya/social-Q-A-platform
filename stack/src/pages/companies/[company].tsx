@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/AuthContext";
 import SaveButton from "@/components/SaveButton";
+import PageLoader from "@/components/PageLoader";
 
 const COMPANIES: Record<string, any> = {
   google: {
@@ -380,7 +381,7 @@ export default function CompanyDetailPage() {
         </h2>
 
         {loading ? (
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500" />
+          <PageLoader />
         ) : questions.length === 0 ? (
           <div className="text-center py-10 border rounded-lg bg-white">
             <p className="text-gray-500 mb-2">No questions found for {company.name} yet.</p>

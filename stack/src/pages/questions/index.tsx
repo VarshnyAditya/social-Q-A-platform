@@ -5,6 +5,7 @@ import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import SaveButton from "@/components/SaveButton";
+import PageLoader from "@/components/PageLoader";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -50,7 +51,7 @@ export default function QuestionsPage() {
   if (loading) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        <PageLoader />
       </Mainlayout>
     );
   }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useLanguage } from "@/lib/LanguageContext";
+import PageLoader from "@/components/PageLoader";
 
 // Built-in descriptions for common tags
 const TAG_DESCRIPTIONS: Record<string, string> = {
@@ -117,7 +118,7 @@ export default function TagsPage() {
   if (loading) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 m-6" />
+        <PageLoader />
       </Mainlayout>
     );
   }

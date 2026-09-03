@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/UserAvatar";
+import PageLoader from "@/components/PageLoader";
 import { Clock, Eye, MessageSquare, Share2, Trash } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -125,7 +126,7 @@ export default function ArticleDetailPage() {
   if (!mounted || loading) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 m-6" />
+        <PageLoader />
       </Mainlayout>
     );
   }

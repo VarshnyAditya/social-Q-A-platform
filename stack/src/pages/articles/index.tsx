@@ -7,6 +7,7 @@ import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { Badge } from "@/components/ui/badge";
+import PageLoader from "@/components/PageLoader";
 import { Clock, Eye, MessageSquare, Plus } from "lucide-react";
 
 export default function ArticlesPage() {
@@ -54,7 +55,7 @@ export default function ArticlesPage() {
   if (loading) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 m-6" />
+        <PageLoader />
       </Mainlayout>
     );
   }

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Mainlayout from "@/layout/Mainlayout";
+import PageLoader from "@/components/PageLoader";
 import { useAuth } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { Calendar, Coins, Edit, MessageCircle, Monitor, Plus, Smartphone, UserCheck, UserPlus, X } from "lucide-react";
@@ -157,7 +158,7 @@ const index = () => {
   if (loading) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        <PageLoader />
       </Mainlayout>
     );
   }

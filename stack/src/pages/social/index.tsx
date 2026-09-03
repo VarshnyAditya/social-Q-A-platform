@@ -5,6 +5,7 @@ import axiosInstance from "@/lib/axiosinstance";
 import { Heart, MessageCircle, Share2, UserPlus, Check, Send, X, Trash2 } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
 import UserAvatar from "@/components/UserAvatar";
+import PageLoader from "@/components/PageLoader";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -258,7 +259,7 @@ export default function SocialPage() {
     return (
       <Mainlayout>
         <div className="flex justify-center mt-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+          <PageLoader />
         </div>
       </Mainlayout>
     );

@@ -13,6 +13,7 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import ReportButton from "./ReportButton";
 import Link from "next/link";
+import PageLoader from "./PageLoader";
 import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
 import { toast } from "react-toastify";
@@ -152,7 +153,7 @@ const QuestionDetail = ({ questionId }: any) => {
 
   if (loading) {
     return (
-      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500" />
+      <PageLoader />
     );
   }
   if (!question) {

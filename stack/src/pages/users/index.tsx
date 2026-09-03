@@ -7,6 +7,7 @@ import { Calendar, Search, Users } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import UserAvatar from "@/components/UserAvatar";
+import PageLoader from "@/components/PageLoader";
 
 const UsersPage = () => {
   const { user: currentUser } = useAuth();
@@ -50,7 +51,7 @@ const UsersPage = () => {
   if (loading) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        <PageLoader />
       </Mainlayout>
     );
   }

@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/AuthContext";
 import SaveButton from "@/components/SaveButton";
+import PageLoader from "@/components/PageLoader";
 
 export default function TagDetailPage() {
   const router = useRouter();
@@ -59,7 +60,7 @@ export default function TagDetailPage() {
   if (loading) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 m-6" />
+        <PageLoader />
       </Mainlayout>
     );
   }

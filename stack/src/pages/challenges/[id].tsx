@@ -5,6 +5,7 @@ import Mainlayout from "@/layout/Mainlayout";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getChallengeById, type Difficulty } from "@/lib/challengesData";
+import PageLoader from "@/components/PageLoader";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 
 const DIFFICULTY_STYLE: Record<Difficulty, string> = {
@@ -22,7 +23,7 @@ export default function ChallengeDetailPage() {
   if (router.isFallback || (typeof id !== "string" && id !== undefined)) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 m-6" />
+        <PageLoader />
       </Mainlayout>
     );
   }

@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import PageLoader from "@/components/PageLoader";
 import { toast } from "react-toastify";
 
 type SavedQuestion = {
@@ -72,7 +73,7 @@ export default function SavedPage() {
   if (loading) {
     return (
       <Mainlayout>
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500" />
+        <PageLoader />
       </Mainlayout>
     );
   }

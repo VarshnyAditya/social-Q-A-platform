@@ -18,4 +18,24 @@ axiosInstance.interceptors.request.use((req) => {
   }
   return req;
 });
+
+// Feeds OfflineOverlay: a request that fails with no `error.response` at
+// all never reached the server — that's a real connectivity failure, not
+// a normal 4xx/5xx from the API, which should still just reject normally
+// and be handled by whatever page made the call.
+axiosInstance.interceptors.response.use(
+  (response) => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("app:online"));
+    }
+    return response;
+  },
+  (error) => {
+    if (typeof window !== "undefined" && !error.response) {
+      window.dispatchEvent(new Event("app:offline"));
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;
