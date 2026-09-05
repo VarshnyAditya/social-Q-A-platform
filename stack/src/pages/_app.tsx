@@ -10,6 +10,8 @@ export default function App({ Component, pageProps }: AppProps) {
     <>
       <Head>
         <title>Code-Quest</title>
+        {/* Google Search Content. */}
+        <meta name="google-site-verification" content="REPLACE_WITH_YOUR_CODE" />
       </Head>
       <LanguageProvider>
         <AuthProvider>
