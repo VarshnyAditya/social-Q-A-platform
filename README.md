@@ -40,7 +40,7 @@ Posting Rules
 - More than 10 Friends → Unlimited posts/day
 
 ### 💬 Real-Time Chat & Teams
-- Friend-to-Friend Direct Messaging (text, images, and videos up to 30MB)
+- Friend-to-Friend Direct Messaging (text, images, and videos up to 20MB)
 - Deep-linkable Conversations (jump straight to a chat from a friend's profile)
 - Team / Community Creation (requires 15+ Reward Points)
 - Public Team Directory — browse and join teams created by other users

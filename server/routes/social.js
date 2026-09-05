@@ -27,4 +27,17 @@ router.post("/friend/accept", auth, acceptFriendRequest);
 router.get("/friend/mydata", auth, getMyFriendData);
 router.get("/friend/status/:targetid", auth, getFriendStatus);
 
+// Turns multer errors (oversized file, bad type) into a clean JSON response
+// instead of Express's default HTML error page — same pattern used on the
+// chat and team routes.
+router.use((err, req, res, next) => {
+  if (err?.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({ message: "File too large — max size is 50MB." });
+  }
+  if (err) {
+    return res.status(400).json({ message: err.message || "Upload failed" });
+  }
+  next();
+});
+
 export default router;

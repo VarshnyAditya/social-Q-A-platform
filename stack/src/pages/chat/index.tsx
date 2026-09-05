@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
-const MAX_MEDIA_BYTES = 30 * 1024 * 1024; // 30MB, matches the server-side cap
+const MAX_MEDIA_BYTES = 20 * 1024 * 1024; // 20MB, matches the server-side cap
 
 interface ConversationEntry {
   friendId: string;
@@ -130,7 +130,7 @@ export default function ChatPage() {
       return;
     }
     if (file.size > MAX_MEDIA_BYTES) {
-      toast.error("File is too large — max size is 30MB");
+      toast.error("File is too large — max size is 20MB");
       return;
     }
     setMediaFile(file);
@@ -373,7 +373,7 @@ export default function ChatPage() {
                   </button>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
-                  <ImageIcon className="w-3 h-3" /> / <Film className="w-3 h-3" /> up to 30MB
+                  <ImageIcon className="w-3 h-3" /> / <Film className="w-3 h-3" /> up to 20MB
                 </p>
               </div>
             </>

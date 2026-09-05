@@ -2,6 +2,7 @@ import team from "../models/team.js";
 import teamMessage from "../models/teamMessage.js";
 import user from "../models/auth.js";
 import points from "../models/points.js";
+import { isDuplicateSend, releaseSend } from "../utils/dedupeGuard.js";
 
 const MIN_POINTS_TO_CREATE_TEAM = 15;
 
@@ -149,6 +150,7 @@ export const sendTeamMessage = async (req, res) => {
   const userid = req.userid;
   const { id } = req.params;
   const { text } = req.body;
+  const dedupeKey = `team:${userid}:${id}:${text?.trim() || "MEDIA"}`;
   try {
     const found = await team.findById(id);
     if (!found) return res.status(404).json({ message: "Team not found" });
@@ -157,6 +159,11 @@ export const sendTeamMessage = async (req, res) => {
     }
     if (!text?.trim() && !req.file) {
       return res.status(400).json({ message: "Message cannot be empty" });
+    }
+
+    // Server-enforced "only sends once" guard — see utils/dedupeGuard.js.
+    if (isDuplicateSend(dedupeKey)) {
+      return res.status(429).json({ message: "Please wait a moment before sending again." });
     }
 
     const sender = await user.findById(userid).select("name");
@@ -179,6 +186,9 @@ export const sendTeamMessage = async (req, res) => {
 
     res.status(200).json({ data: newMessage });
   } catch (error) {
+    // The dedup key was already marked "accepted" before this failed — release
+    // it so a legitimate immediate retry isn't wrongly rejected as a duplicate.
+    releaseSend(dedupeKey);
     console.log("SEND TEAM MESSAGE ERROR:", error.message);
     res.status(500).json({ message: error.message || "Something went wrong" });
   }

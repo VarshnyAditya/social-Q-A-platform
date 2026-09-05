@@ -2,6 +2,7 @@ import message from "../models/chat.js";
 import user from "../models/auth.js";
 import { createNotification } from "./notification.js";
 import { isOnline } from "../utils/onlineStatus.js";
+import { isDuplicateSend, releaseSend } from "../utils/dedupeGuard.js";
 
 // Friendship is symmetric — both users' `friends` arrays are kept in sync
 // when a request is accepted (see social.js: acceptFriendRequest), so
@@ -15,6 +16,7 @@ export const sendMessage = async (req, res) => {
   const fromid = req.userid;
   const { friendid } = req.params;
   const { text } = req.body;
+  const dedupeKey = `chat:${fromid}:${friendid}:${text?.trim() || "MEDIA"}`;
 
   try {
     if (String(fromid) === String(friendid)) {
@@ -25,6 +27,11 @@ export const sendMessage = async (req, res) => {
     }
     if (!text?.trim() && !req.file) {
       return res.status(400).json({ message: "Message cannot be empty" });
+    }
+
+    // Server-enforced "only sends once" guard — see utils/dedupeGuard.js.
+    if (isDuplicateSend(dedupeKey)) {
+      return res.status(429).json({ message: "Please wait a moment before sending again." });
     }
 
     let mediaUrl = "";
@@ -54,6 +61,9 @@ export const sendMessage = async (req, res) => {
 
     res.status(200).json({ data: newMessage });
   } catch (error) {
+    // The dedup key was already marked "accepted" before this failed — release
+    // it so a legitimate immediate retry isn't wrongly rejected as a duplicate.
+    releaseSend(dedupeKey);
     console.log("SEND MESSAGE ERROR:", error.message);
     res.status(500).json({ message: error.message || "Something went wrong" });
   }

@@ -11,8 +11,8 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// Chat requirement: images and videos only, capped at 30MB per file.
-const CHAT_MEDIA_LIMIT_BYTES = 30 * 1024 * 1024;
+// Chat requirement: images and videos only, capped at 20MB per file.
+const CHAT_MEDIA_LIMIT_BYTES = 20 * 1024 * 1024;
 
 export const chatUpload = multer({
   storage,
