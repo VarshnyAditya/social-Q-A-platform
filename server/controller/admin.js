@@ -5,6 +5,8 @@ import team from "../models/team.js";
 import teamMessage from "../models/teamMessage.js";
 import user from "../models/auth.js";
 import auditLog from "../models/auditLog.js";
+import subscription from "../models/subscription.js";
+import points from "../models/points.js";
 import { deductPoints } from "./points.js";
 import { isOnline, ONLINE_THRESHOLD_MS } from "../utils/onlineStatus.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
@@ -205,9 +207,9 @@ export const adminDeleteTeamMessage = async (req, res) => {
 
 // ---------------- User management ----------------
 
-// GET /admin/users?search=name-or-email
+// GET /admin/users?search=name-or-email&plan=free|bronze|silver|gold
 export const getAllUsersAdmin = async (req, res) => {
-  const { search } = req.query;
+  const { search, plan } = req.query;
   try {
     const filter = search
       ? {
@@ -222,11 +224,60 @@ export const getAllUsersAdmin = async (req, res) => {
       .select("name email role banned joinDate lastActiveAt")
       .sort({ joinDate: -1 })
       .limit(100);
-    const withOnlineStatus = users.map((u) => ({
-      ...u.toObject(),
-      online: isOnline(u.lastActiveAt),
-    }));
-    res.status(200).json({ data: withOnlineStatus });
+
+    const userIds = users.map((u) => String(u._id));
+
+    // ---- Subscription plan per user ----
+    // A user can have multiple subscription records over time (renewals,
+    // past plans); the one that matters for "what plan are they on right
+    // now" is their most recent *active, unexpired* one. Pull all active
+    // subs for this page of users in a single query rather than N+1.
+    const activeSubs = await subscription
+      .find({ userid: { $in: userIds }, status: "active" })
+      .sort({ startDate: -1 });
+    const planByUser = new Map();
+    for (const sub of activeSubs) {
+      if (planByUser.has(sub.userid)) continue; // already have the most recent one
+      const expired = sub.expiryDate && new Date(sub.expiryDate) < new Date();
+      planByUser.set(sub.userid, {
+        plan: expired ? "free" : sub.plan,
+        subscriptionStatus: expired ? "expired" : "active",
+        subscriptionExpiry: sub.expiryDate || null,
+      });
+    }
+
+    // ---- Reward points per user ----
+    const pointsDocs = await points.find({ userid: { $in: userIds } }).select("userid totalPoints");
+    const pointsByUser = new Map(pointsDocs.map((p) => [p.userid, p.totalPoints]));
+
+    // ---- Questions asked per user (activity signal) ----
+    const questionCounts = await question.aggregate([
+      { $match: { userid: { $in: userIds } } },
+      { $group: { _id: "$userid", count: { $sum: 1 } } },
+    ]);
+    const questionCountByUser = new Map(questionCounts.map((q) => [q._id, q.count]));
+
+    let withExtras = users.map((u) => {
+      const idStr = String(u._id);
+      const subInfo = planByUser.get(idStr) || {
+        plan: "free",
+        subscriptionStatus: "none",
+        subscriptionExpiry: null,
+      };
+      return {
+        ...u.toObject(),
+        online: isOnline(u.lastActiveAt),
+        ...subInfo,
+        totalPoints: pointsByUser.get(idStr) || 0,
+        questionCount: questionCountByUser.get(idStr) || 0,
+      };
+    });
+
+    if (plan && ["free", "bronze", "silver", "gold"].includes(plan)) {
+      withExtras = withExtras.filter((u) => u.plan === plan);
+    }
+
+    res.status(200).json({ data: withExtras });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
   }

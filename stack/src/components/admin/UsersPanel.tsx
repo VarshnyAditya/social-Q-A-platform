@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatPresence } from "@/lib/utils";
-import { Search, ShieldOff, ShieldCheck, UserX, Circle } from "lucide-react";
+import { Search, ShieldOff, ShieldCheck, UserX, Circle, Award, HelpCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+
+type Plan = "free" | "bronze" | "silver" | "gold";
 
 interface AdminUser {
   _id: string;
@@ -17,20 +19,44 @@ interface AdminUser {
   joinDate: string;
   online: boolean;
   lastActiveAt: string | null;
+  plan: Plan;
+  subscriptionStatus: "active" | "expired" | "none";
+  subscriptionExpiry: string | null;
+  totalPoints: number;
+  questionCount: number;
 }
+
+const PLAN_STYLES: Record<Plan, string> = {
+  free: "bg-gray-100 text-gray-700",
+  bronze: "bg-amber-100 text-amber-800",
+  silver: "bg-slate-200 text-slate-700",
+  gold: "bg-yellow-100 text-yellow-800",
+};
+
+const PLAN_LABELS: Record<Plan, string> = {
+  free: "Free",
+  bronze: "Bronze",
+  silver: "Silver",
+  gold: "Gold",
+};
 
 export default function UsersPanel() {
   const { user: currentUser } = useAuth();
   const [search, setSearch] = useState("");
+  const [planFilter, setPlanFilter] = useState<"" | Plan>("");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
 
-  const fetchUsers = async (q = "") => {
+  const fetchUsers = async (q = search, p = planFilter) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(`/admin/users${q ? `?search=${encodeURIComponent(q)}` : ""}`);
+      const params = new URLSearchParams();
+      if (q) params.set("search", q);
+      if (p) params.set("plan", p);
+      const qs = params.toString();
+      const res = await axiosInstance.get(`/admin/users${qs ? `?${qs}` : ""}`);
       setUsers(res.data.data);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Could not load users");
@@ -60,14 +86,22 @@ export default function UsersPanel() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchUsers(search);
+    fetchUsers(search, planFilter);
+  };
+
+  const handlePlanFilterChange = (value: "" | Plan) => {
+    setPlanFilter(value);
+    fetchUsers(search, value);
   };
 
   const act = async (id: string, action: "ban" | "unban" | "promote" | "demote") => {
     setActingId(id);
     try {
       const res = await axiosInstance.patch(`/admin/users/${id}/${action}`);
-      setUsers((prev) => prev.map((u) => (u._id === id ? res.data.data : u)));
+      // Merge rather than replace — these endpoints only return
+      // name/email/role/banned, so replacing the whole object would wipe
+      // out plan/points/questionCount/online that getAllUsersAdmin sends.
+      setUsers((prev) => prev.map((u) => (u._id === id ? { ...u, ...res.data.data } : u)));
       toast.success("Updated");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Could not update user");
@@ -86,7 +120,7 @@ export default function UsersPanel() {
         </p>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 mb-6">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <Input
@@ -96,6 +130,17 @@ export default function UsersPanel() {
             className="pl-9"
           />
         </div>
+        <select
+          value={planFilter}
+          onChange={(e) => handlePlanFilterChange(e.target.value as "" | Plan)}
+          className="border rounded-md px-3 py-2 text-sm bg-white"
+        >
+          <option value="">All plans</option>
+          <option value="free">Free</option>
+          <option value="bronze">Bronze</option>
+          <option value="silver">Silver</option>
+          <option value="gold">Gold</option>
+        </select>
         <Button type="submit" variant="outline">
           Search
         </Button>
@@ -126,6 +171,10 @@ export default function UsersPanel() {
                     {u.role === "admin" && (
                       <Badge className="bg-orange-100 text-orange-800 text-[10px]">Admin</Badge>
                     )}
+                    <Badge className={`text-[10px] ${PLAN_STYLES[u.plan]}`}>
+                      {PLAN_LABELS[u.plan]}
+                      {u.subscriptionStatus === "expired" && " (expired)"}
+                    </Badge>
                     {u.banned && (
                       <Badge className="bg-red-100 text-red-800 text-[10px]">Suspended</Badge>
                     )}
@@ -139,6 +188,21 @@ export default function UsersPanel() {
                   <p className="text-[11px] text-gray-400">
                     {formatPresence(u.online, u.lastActiveAt)}
                   </p>
+                  <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Award className="w-3 h-3" /> {u.totalPoints} pts
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <HelpCircle className="w-3 h-3" /> {u.questionCount} question
+                      {u.questionCount === 1 ? "" : "s"}
+                    </span>
+                    {u.plan !== "free" && u.subscriptionExpiry && (
+                      <span>
+                        {u.subscriptionStatus === "expired" ? "Expired" : "Renews"}{" "}
+                        {new Date(u.subscriptionExpiry).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-2 flex-shrink-0">
