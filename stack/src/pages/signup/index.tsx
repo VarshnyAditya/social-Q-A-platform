@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Seo from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +38,9 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <>
+      <Seo title="Sign Up — CodeQuest" path="/signup" noindex />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6 lg:mb-8">
           <Link href="/" className="flex items-center justify-center mb-4">
@@ -112,5 +115,6 @@ export default function SignUpPage() {
         </form>
       </div>
     </div>
+    </>
   );
 }

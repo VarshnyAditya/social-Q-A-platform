@@ -10,6 +10,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import SaveButton from "@/components/SaveButton";
 import PageLoader from "@/components/PageLoader";
+import Seo from "@/components/Seo";
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, absoluteUrl } from "@/lib/seo";
 
 const getAnswerNetVotes = (q: any) =>
   (q.answer || []).reduce(
@@ -155,9 +157,22 @@ export default function HomePage() {
     );
   };
 
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: absoluteUrl("/"),
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${absoluteUrl("/questions")}?tag={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   if (loading) {
     return (
       <Mainlayout>
+        <Seo title={DEFAULT_TITLE} description={DEFAULT_DESCRIPTION} path="/" jsonLd={websiteJsonLd} />
         <PageLoader />
       </Mainlayout>
     );
@@ -195,6 +210,7 @@ export default function HomePage() {
 
   return (
     <Mainlayout>
+      <Seo title={DEFAULT_TITLE} description={DEFAULT_DESCRIPTION} path="/" jsonLd={websiteJsonLd} />
       <main className="min-w-0 p-4 lg:p-6 space-y-8">
         {/* Hero */}
         <div className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 text-white p-6">

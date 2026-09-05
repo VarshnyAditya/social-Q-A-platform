@@ -1,4 +1,5 @@
 import Mainlayout from "@/layout/Mainlayout";
+import Seo from "@/components/Seo";
 import { useAuth } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ export default function CreateTeamPage() {
 
   return (
     <Mainlayout>
+      <Seo title="Create a Team — CodeQuest" path="/teams/create" noindex />
       <div className="max-w-lg mx-auto">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">Create a Team</h1>
         <p className="text-sm text-gray-500 mb-6">

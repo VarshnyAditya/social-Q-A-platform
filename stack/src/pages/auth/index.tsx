@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/AuthContext";
+import Seo from "@/components/Seo";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
@@ -35,10 +36,12 @@ const index = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6 lg:mb-8">
-          <Link href="/" className="flex items-center justify-center mb-4">
+    <>
+      <Seo title="Log In — CodeQuest" path="/auth" noindex />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6 lg:mb-8">
+            <Link href="/" className="flex items-center justify-center mb-4">
             <div className="w-6 h-6 lg:w-8 lg:h-8 bg-orange-500 rounded mr-2 flex items-center justify-center">
               <div className="w-4 h-4 lg:w-6 lg:h-6 bg-white rounded-sm flex items-center justify-center">
                 <div className="w-3 h-3 lg:w-4 lg:h-4 bg-orange-500 rounded-sm"></div>
@@ -157,6 +160,7 @@ const index = () => {
         </form>
       </div>
     </div>
+    </>
   );
 };
 

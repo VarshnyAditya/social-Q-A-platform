@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import Link from "next/link";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useLanguage } from "@/lib/LanguageContext";
+import Seo from "@/components/Seo";
 
 const COMPANIES = [
   {
@@ -242,9 +242,11 @@ export default function CompaniesPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>Companies — StackClone</title>
-      </Head>
+      <Seo
+        title="Companies — CodeQuest"
+        description="Explore top tech companies and the skills, tags, and interview topics associated with them on CodeQuest."
+        path="/companies"
+      />
       <div className="p-4 lg:p-6">
         <h1 className="text-xl lg:text-2xl font-semibold mb-2">{t("nav.companies")}</h1>
         <p className="text-sm text-gray-600 mb-6">

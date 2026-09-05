@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
@@ -8,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import PageLoader from "@/components/PageLoader";
+import Seo from "@/components/Seo";
 import { Clock, Eye, MessageSquare, Plus } from "lucide-react";
 
 export default function ArticlesPage() {
@@ -55,6 +55,11 @@ export default function ArticlesPage() {
   if (loading) {
     return (
       <Mainlayout>
+        <Seo
+          title="Articles — CodeQuest"
+          description="Read in-depth articles and tutorials written by the CodeQuest community — covering programming languages, frameworks, and best practices."
+          path="/articles"
+        />
         <PageLoader />
       </Mainlayout>
     );
@@ -62,9 +67,11 @@ export default function ArticlesPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>Articles — StackClone</title>
-      </Head>
+      <Seo
+        title="Articles — CodeQuest"
+        description="Read in-depth articles and tutorials written by the CodeQuest community — covering programming languages, frameworks, and best practices."
+        path="/articles"
+      />
       <div className="p-4 lg:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

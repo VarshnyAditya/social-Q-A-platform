@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
@@ -9,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/AuthContext";
 import SaveButton from "@/components/SaveButton";
 import PageLoader from "@/components/PageLoader";
+import Seo from "@/components/Seo";
 
 export default function TagDetailPage() {
   const router = useRouter();
@@ -57,9 +57,16 @@ export default function TagDetailPage() {
     fetchQuestions();
   }, [tagName]);
 
+  const seoTitle = `Questions tagged [${tagName || ""}] — CodeQuest`;
+  const seoDescription = tagName
+    ? `Browse ${questions.length || ""} question${questions.length === 1 ? "" : "s"} tagged "${tagName}" on CodeQuest, a community Q&A platform for developers.`
+    : "Browse questions by tag on CodeQuest.";
+  const seoPath = `/tags/${encodeURIComponent((tagName || "").toLowerCase())}`;
+
   if (loading) {
     return (
       <Mainlayout>
+        <Seo title={seoTitle} description={seoDescription} path={seoPath} />
         <PageLoader />
       </Mainlayout>
     );
@@ -67,9 +74,7 @@ export default function TagDetailPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>Questions tagged [{tagName}] — StackClone</title>
-      </Head>
+      <Seo title={seoTitle} description={seoDescription} path={seoPath} />
       <div className="p-4 lg:p-6">
 
         {/* Header */}

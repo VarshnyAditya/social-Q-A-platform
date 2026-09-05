@@ -1,4 +1,5 @@
 import Mainlayout from "@/layout/Mainlayout";
+import Seo from "@/components/Seo";
 import { useAuth } from "@/lib/AuthContext";
 import { History, ShieldAlert, Users, Users2 } from "lucide-react";
 import { useState } from "react";
@@ -45,6 +46,7 @@ export default function AdminPage() {
 
   return (
     <Mainlayout>
+      <Seo title="Admin — CodeQuest" path="/admin" noindex />
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1 flex items-center gap-2">
           <ShieldAlert className="w-6 h-6 text-orange-500" /> Admin

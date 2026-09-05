@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import Link from "next/link";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useLanguage } from "@/lib/LanguageContext";
 import PageLoader from "@/components/PageLoader";
+import Seo from "@/components/Seo";
 
 // Built-in descriptions for common tags
 const TAG_DESCRIPTIONS: Record<string, string> = {
@@ -118,6 +118,11 @@ export default function TagsPage() {
   if (loading) {
     return (
       <Mainlayout>
+        <Seo
+          title="Tags — CodeQuest"
+          description="Browse every topic tag used across CodeQuest questions — find popular programming languages, frameworks, and tools discussed by the community."
+          path="/tags"
+        />
         <PageLoader />
       </Mainlayout>
     );
@@ -125,9 +130,11 @@ export default function TagsPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>Tags — StackClone</title>
-      </Head>
+      <Seo
+        title="Tags — CodeQuest"
+        description="Browse every topic tag used across CodeQuest questions — find popular programming languages, frameworks, and tools discussed by the community."
+        path="/tags"
+      />
       <div className="p-4 lg:p-6">
         <h1 className="text-xl lg:text-2xl font-semibold mb-2">{t("nav.tags")}</h1>
         <p className="text-sm text-gray-600 mb-6">

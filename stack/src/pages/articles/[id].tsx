@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
@@ -9,6 +8,8 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/UserAvatar";
 import PageLoader from "@/components/PageLoader";
+import Seo from "@/components/Seo";
+import { truncate } from "@/lib/seo";
 import { Clock, Eye, MessageSquare, Share2, Trash } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -134,16 +135,28 @@ export default function ArticleDetailPage() {
   if (!article) {
     return (
       <Mainlayout>
+        <Seo
+          title="Article not found — CodeQuest"
+          description="This article could not be found on CodeQuest."
+          path={`/articles/${typeof id === "string" ? id : ""}`}
+          noindex
+        />
         <div className="p-6 text-gray-500">Article not found.</div>
       </Mainlayout>
     );
   }
 
+  const articleDescription = truncate(article.summary || article.content || "", 160);
+
   return (
     <Mainlayout>
-      <Head>
-        <title>{article.title} — StackClone</title>
-      </Head>
+      <Seo
+        title={`${article.title} — CodeQuest`}
+        description={articleDescription}
+        path={`/articles/${article._id}`}
+        image={article.coverImage || undefined}
+        type="article"
+      />
       <div className="p-4 lg:p-6 max-w-4xl">
 
         {/* Cover image */}

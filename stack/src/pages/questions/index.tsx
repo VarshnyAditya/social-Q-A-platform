@@ -9,6 +9,8 @@ import PageLoader from "@/components/PageLoader";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import Seo from "@/components/Seo";
+import { DEFAULT_DESCRIPTION } from "@/lib/seo";
 
 export default function QuestionsPage() {
   const [question, setquestion] = useState<any>(null);
@@ -48,9 +50,20 @@ export default function QuestionsPage() {
     fetchSavedIds();
   }, [user]);
 
+  const seoTitle = activeTag
+    ? `Questions tagged [${activeTag}] — CodeQuest`
+    : "All Questions — CodeQuest";
+  const seoDescription = activeTag
+    ? `Browse questions tagged "${activeTag}" on CodeQuest, a community Q&A platform for developers.`
+    : DEFAULT_DESCRIPTION;
+  // Tag-filtered views here duplicate /tags/[tag], so canonicalize to that
+  // page instead of indexing /questions?tag=... as a separate URL.
+  const seoPath = activeTag ? `/tags/${encodeURIComponent(activeTag.toLowerCase())}` : "/questions";
+
   if (loading) {
     return (
       <Mainlayout>
+        <Seo title={seoTitle} description={seoDescription} path={seoPath} />
         <PageLoader />
       </Mainlayout>
     );
@@ -58,6 +71,7 @@ export default function QuestionsPage() {
   if (!question || question.length === 0) {
     return (
       <Mainlayout>
+        <Seo title={seoTitle} description={seoDescription} path={seoPath} />
         <div className="text-center text-gray-500 mt-4">No question found.</div>
       </Mainlayout>
     );
@@ -103,6 +117,7 @@ export default function QuestionsPage() {
 
   return (
     <Mainlayout>
+      <Seo title={seoTitle} description={seoDescription} path={seoPath} />
       <main className="min-w-0 p-4 lg:p-6 ">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h1 className="text-xl lg:text-2xl font-semibold">

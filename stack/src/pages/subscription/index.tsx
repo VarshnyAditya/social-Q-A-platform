@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
+import Seo from "@/components/Seo";
 import Script from "next/script";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
@@ -105,9 +105,7 @@ export default function SubscriptionPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>Subscription Plans</title>
-      </Head>
+      <Seo title="Subscription Plans — CodeQuest" path="/subscription" noindex />
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="p-4 lg:p-6">
         <h1 className="text-xl lg:text-2xl font-semibold mb-2">{t("pages.subscriptionPlans")}</h1>

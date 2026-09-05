@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
@@ -9,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/AuthContext";
 import SaveButton from "@/components/SaveButton";
 import PageLoader from "@/components/PageLoader";
+import Seo from "@/components/Seo";
 
 const COMPANIES: Record<string, any> = {
   google: {
@@ -292,6 +292,12 @@ export default function CompanyDetailPage() {
   if (!company) {
     return (
       <Mainlayout>
+        <Seo
+          title="Company not found — CodeQuest"
+          description="This company page could not be found on CodeQuest."
+          path={`/companies/${id || ""}`}
+          noindex
+        />
         <div className="p-6 text-gray-500">Company not found.</div>
       </Mainlayout>
     );
@@ -299,9 +305,11 @@ export default function CompanyDetailPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>{company.name} — StackClone</title>
-      </Head>
+      <Seo
+        title={`${company.name} — Interview Questions & Tags — CodeQuest`}
+        description={company.description}
+        path={`/companies/${id}`}
+      />
       <div className="p-4 lg:p-6 max-w-5xl">
 
         {/* Company Header */}

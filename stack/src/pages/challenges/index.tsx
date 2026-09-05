@@ -1,10 +1,10 @@
-import Head from "next/head";
 import Link from "next/link";
 import { useState } from "react";
 import Mainlayout from "@/layout/Mainlayout";
 import { Badge } from "@/components/ui/badge";
 import { challenges, type Difficulty } from "@/lib/challengesData";
 import { useLanguage } from "@/lib/LanguageContext";
+import Seo from "@/components/Seo";
 import { Trophy } from "lucide-react";
 
 const DIFFICULTY_STYLE: Record<Difficulty, string> = {
@@ -26,9 +26,11 @@ export default function ChallengesPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>Challenges — CodeQuest</title>
-      </Head>
+      <Seo
+        title="Coding Challenges — CodeQuest"
+        description="Practice coding challenges on CodeQuest — solve algorithm and data structure problems ranging from easy to hard."
+        path="/challenges"
+      />
       <div className="p-4 lg:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

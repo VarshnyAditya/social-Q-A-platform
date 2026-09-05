@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
+import Seo from "@/components/Seo";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
@@ -111,9 +111,7 @@ export default function PointsPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>My Rewards</title>
-      </Head>
+      <Seo title="My Rewards — CodeQuest" path="/points" noindex />
       <div className="p-4 lg:p-6 max-w-3xl">
 
         {/* ---- Balance card ---- */}

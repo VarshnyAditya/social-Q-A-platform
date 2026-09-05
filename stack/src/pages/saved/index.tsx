@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
+import Seo from "@/components/Seo";
 import Link from "next/link";
 import { Bookmark, X } from "lucide-react";
 import Mainlayout from "@/layout/Mainlayout";
@@ -80,9 +80,7 @@ export default function SavedPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>Saved Questions</title>
-      </Head>
+      <Seo title="Saved Questions — CodeQuest" path="/saved" noindex />
       <div className="p-4 lg:p-6 max-w-4xl">
         <div className="flex items-center gap-2 mb-6">
           <Bookmark className="w-5 h-5 text-yellow-500" fill="currentColor" />

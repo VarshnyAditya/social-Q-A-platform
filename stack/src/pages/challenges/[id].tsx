@@ -1,4 +1,3 @@
-import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
@@ -6,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getChallengeById, type Difficulty } from "@/lib/challengesData";
 import PageLoader from "@/components/PageLoader";
+import Seo from "@/components/Seo";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 
 const DIFFICULTY_STYLE: Record<Difficulty, string> = {
@@ -31,6 +31,12 @@ export default function ChallengeDetailPage() {
   if (!challenge) {
     return (
       <Mainlayout>
+        <Seo
+          title="Challenge not found — CodeQuest"
+          description="This coding challenge could not be found on CodeQuest."
+          path={`/challenges/${typeof id === "string" ? id : ""}`}
+          noindex
+        />
         <div className="p-6 text-center text-gray-500">
           <p className="mb-4">Challenge not found.</p>
           <Link href="/challenges" className="text-blue-600 hover:underline text-sm">
@@ -43,9 +49,11 @@ export default function ChallengeDetailPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>{challenge.title} — Challenges — CodeQuest</title>
-      </Head>
+      <Seo
+        title={`${challenge.title} — Coding Challenge — CodeQuest`}
+        description={challenge.description}
+        path={`/challenges/${challenge.id}`}
+      />
       <div className="max-w-3xl p-4 lg:p-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1 text-sm text-gray-500 mb-4">

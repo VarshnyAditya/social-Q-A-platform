@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import Mainlayout from "@/layout/Mainlayout";
+import Seo from "@/components/Seo";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -64,6 +65,7 @@ const UsersPage = () => {
 
   return (
     <Mainlayout>
+      <Seo title="Users — CodeQuest" path="/users" noindex />
       <div className="max-w-6xl">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl lg:text-2xl font-semibold">{t("nav.users")}</h1>

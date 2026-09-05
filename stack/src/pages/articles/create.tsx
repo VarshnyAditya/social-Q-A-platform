@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Head from "next/head";
 import { useRouter } from "next/router";
 import Mainlayout from "@/layout/Mainlayout";
+import Seo from "@/components/Seo";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -70,9 +70,7 @@ export default function CreateArticlePage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>Write Article — StackClone</title>
-      </Head>
+      <Seo title="Write Article — CodeQuest" path="/articles/create" noindex />
       <div className="p-4 lg:p-6 max-w-3xl">
         <h1 className="text-xl lg:text-2xl font-semibold mb-6">{t("pages.writeArticle")}</h1>
 

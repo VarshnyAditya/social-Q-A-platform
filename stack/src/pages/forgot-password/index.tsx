@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import axiosInstance from "@/lib/axiosinstance";
 import { KeyRound, RefreshCw, Copy, Check, ArrowLeft, Eye, EyeOff, Shuffle, Mail, Phone, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import Seo from "@/components/Seo";
 import { useState, useRef } from "react";
 
 type Stage = "identifier" | "otp" | "password" | "success" | "limited";
@@ -169,7 +170,9 @@ export default function ForgotPassword() {
   const strength = getStrength(password);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <>
+      <Seo title="Reset Password — CodeQuest" path="/forgot-password" noindex />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
 
         <div className="text-center mb-6">
@@ -469,5 +472,6 @@ export default function ForgotPassword() {
 
       </div>
     </div>
+    </>
   );
 }

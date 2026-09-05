@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Mainlayout from "@/layout/Mainlayout";
+import Seo from "@/components/Seo";
 import PageLoader from "@/components/PageLoader";
 import { useAuth } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
@@ -275,6 +276,7 @@ const index = () => {
   const isOwnProfile = id === currentUserId;
   return (
     <Mainlayout>
+      <Seo title="User Profile — CodeQuest" path={`/users/${id || ""}`} noindex />
       <div className="max-w-6xl">
         {/* User Header */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 mb-8">

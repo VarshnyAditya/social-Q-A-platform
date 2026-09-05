@@ -1,4 +1,4 @@
-import Head from "next/head";
+import Seo from "@/components/Seo";
 import Mainlayout from "@/layout/Mainlayout";
 import axiosInstance from "@/lib/axiosinstance";
 import { useAuth } from "@/lib/AuthContext";
@@ -175,9 +175,7 @@ export default function AIAssistPage() {
 
   return (
     <Mainlayout>
-      <Head>
-        <title>AI Assist — CodeQuest</title>
-      </Head>
+      <Seo title="AI Assist — CodeQuest" path="/ai-assist" noindex />
       <div className="p-4 lg:p-6 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
